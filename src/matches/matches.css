@@ -1,0 +1,81 @@
+/* Scoreboard controls sit in the panel header and wrap on narrow screens */
+.matches-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.matches-controls .search input {
+  width: 200px;
+}
+
+/* Class icons in the Classes column. Scoped to .class-icons because overview.css also has a .class-icon rule */
+.class-icons {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.class-icons .class-icon {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+/* Match history rows: a strip on the left edge in the outcome color */
+.matches-table tbody tr.row-wins td:first-child {
+  box-shadow: inset 4px 0 0 var(--positive);
+}
+
+.matches-table tbody tr.row-losses td:first-child {
+  box-shadow: inset 4px 0 0 var(--negative);
+}
+
+.matches-table tbody tr.row-ties td:first-child {
+  box-shadow: inset 4px 0 0 var(--neutral);
+}
+
+.matches-table tbody tr.row-none td:first-child {
+  box-shadow: inset 4px 0 0 var(--rule);
+}
+
+/* Matches with no result data (MvM, abandoned): muted so they read as missing data */
+.matches-table .outcome-none {
+  opacity: 0.6;
+}
+
+/* The scoreboard fills the dialog body; the rows scroll inside it */
+.table-wrapper.matches-table {
+  min-height: 360px;
+  max-height: calc(100vh - 300px);
+}
+
+/* The match a link on the Overview tab asked to show. The highlight clears when the matches list changes. */
+.matches-table tbody tr.is-focused td {
+  background: rgb(244 209 120 / 12%);
+  outline: 1px solid var(--gold);
+  outline-offset: -1px;
+}
+
+/* Team score in the TF2 scoreboard style: team color blocks with the score in TF2 Build */
+.score-red,
+.score-blu {
+  padding: 0 6px;
+  color: var(--tan);
+  font-family: "TF2 Build", sans-serif;
+}
+
+.score-red {
+  background: var(--red);
+}
+
+.score-blu {
+  background: var(--blu);
+}
+
+.score-sep {
+  display: inline-block;
+  padding: 0 4px;
+  color: var(--tan-muted);
+}

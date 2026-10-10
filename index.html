@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#71392e" />
+    <meta name="description" content="Upload TF2 match history CSVs to explore your stats, maps and matches." />
+    <meta property="og:title" content="TF2 Match Data Visualizer" />
+    <meta property="og:description" content="Upload TF2 match CSVs to visualize the data onto charts." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rhgx.github.io/tf2-data-visualizer" />
+    <title>TF2 Match Data Visualizer</title>
+    <link rel="icon" href="ui/glyphs/items.png" />
+    <!-- The hover and pressed button textures are otherwise fetched on the first hover, and the button loses its border while they load. -->
+    <link rel="preload" as="image" href="ui/button_central_hover.png" />
+    <link rel="preload" as="image" href="ui/button_central_depressed.png" />
+    <!-- Both game fonts show on the first paint, so they are fetched with the document rather than after the stylesheet. -->
+    <link rel="preload" as="font" type="font/woff2" href="ui/fonts/tf2build.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="ui/fonts/tf2secondary.woff2" crossorigin />
+  </head>
+  <body>
+    <!-- Menu background, picked like TF2: a random scripts/ChapterBackgrounds.txt entry per launch, replaced by
+         holiday art (tf_hud_mainmenuoverride.cpp) in the date windows from econ_holidays.cpp, in UTC. -->
+    <script>
+      {
+        const pick = (list) => list[Math.floor(Math.random() * list.length)];
+        const now = new Date();
+        const date = (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+        const day = 864e5;
+        const moonCycle = 29.53 * day;
+        const moonPhase = (((now - Date.UTC(2025, 9, 6)) % moonCycle) + moonCycle) % moonCycle;
+        const holiday =
+          date >= 1001 && date < 1108 ? "halloween"
+          : date >= 1201 || date < 108 ? "christmas"
+          : moonPhase < day || moonPhase > moonCycle - day ? "fullmoon"
+          : null;
+        // Recorded for the menu's character art (src/menu/characters.ts), which uses the same windows.
+        if (holiday) document.documentElement.dataset.holiday = holiday;
+        const holidayArt =
+          holiday === "halloween" ? pick(["title_team_halloween2011", "title_team_halloween2012", "title_team_halloween2013", "title_team_halloween2014", "title_team_halloween2015", "title_scream_fortress_2017"])
+          : holiday === "christmas" ? pick(["background_xmas2020", "background_xmas2023"])
+          : holiday === "fullmoon" ? "title_fullmoon"
+          : null;
+        // Holiday art is full color to the edges; a vignette in the page color mutes it toward the regular
+        // backgrounds, which have their own sepia vignette, so it sits behind the UI instead of competing.
+        document.body.style.backgroundImage = holidayArt
+          ? `radial-gradient(ellipse, rgb(28 26 25 / 35%) 30%, rgb(28 26 25 / 80%)), url(ui/console/${holidayArt}.webp)`
+          : `url(ui/console/background_${pick(["2fort", "gravelpit", "upward", "mvm"])}.webp)`;
+        // Set here too, not only in base.css: the stylesheet arrives later in dev, and until then the image would tile.
+        document.body.style.backgroundColor = "#1c1a19";
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundRepeat = "no-repeat";
+        document.body.style.backgroundAttachment = "fixed";
+      }
+    </script>
+
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

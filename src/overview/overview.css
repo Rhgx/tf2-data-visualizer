@@ -1,0 +1,506 @@
+/* Overview tab only. Shared panels, wells, HUD numbers and bars come from base.css. */
+
+/* The two lower columns. align-items: start keeps each column as tall as its own panels, not the other column. */
+.overview-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+/* One column of panels with the same gap as the grid */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.hud-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 16px 24px;
+  padding: 4px 0 8px;
+}
+
+.sub-title {
+  margin: 14px 0 6px;
+  font-family: "TF2 Build", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--tan-muted);
+}
+
+/* Results: one split bar sized by share, then the legend under it */
+.split-bar {
+  display: flex;
+  height: 22px;
+  background: var(--page);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.split-segment {
+  flex: var(--value) 0 0;
+  min-width: 0;
+}
+
+.split-win {
+  background: var(--positive);
+}
+
+.split-tie {
+  background: var(--neutral);
+}
+
+.split-loss {
+  background: var(--negative);
+}
+
+.split-none {
+  background: var(--rule);
+}
+
+.split-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Wraps inside its cell instead of colliding with the next key on narrow screens */
+.split-key {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-family: "TF2 Build", sans-serif;
+  text-transform: uppercase;
+}
+
+.split-count {
+  font-size: 24px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.split-name,
+.split-pct {
+  font-size: 14px;
+}
+
+/* Scoreboard-style team columns */
+.team-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.team-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.team-column > header {
+  display: block;
+  padding: 4px 10px;
+  font-size: 16px;
+}
+
+/* Records, team rows: label left, value right, rule between rows */
+.record-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.record-row:last-child {
+  border-bottom: 0;
+}
+
+.record-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.record-label {
+  font-family: "TF2 Build", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--tan);
+}
+
+.record-detail {
+  font-size: 13px;
+  color: var(--tan-muted);
+}
+
+.record-end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.record-value {
+  font-family: "TF2 Build", sans-serif;
+  font-size: 20px;
+  color: var(--tan);
+  text-shadow: 2px 2px 0 #000;
+}
+
+/* Class icons lead the Classes bar labels. The label grows to fit the icon, so nothing is clipped. */
+.class-icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 6px; }
+
+/* The calendar and the hour section stack, each at full width. The hour grids are measured against this box. */
+.activity-body {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The toggle sits on the calendar's heading row and wraps under it on narrow screens */
+.heat-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+/* One button per year with timed matches, newest first. They wrap onto more rows when there are many. */
+.year-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Two grids side by side once the box is 900px wide. Each grid is about half, so its cells land near the calendar's cell size. */
+.hour-grids {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.hour-grid {
+  min-width: 0;
+}
+
+.hour-title {
+  margin: 0 0 6px;
+  font-family: "TF2 Build", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--tan-muted);
+}
+
+@container (min-width: 900px) {
+  .hour-grids {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Heatmaps: columns are weeks (calendar) or hours, rows are weekdays. Column 1 holds the weekday names and row 1 the axis labels.
+   Items are placed explicitly in the heat-grid, so the hour grid's edge bars line up with its columns and rows.
+   Columns share the free width equally, and every cell is square, so the cell size follows the panel width. */
+/* The container is the heatmap's own width, so cqw in .heat-grid measures the cells */
+.heat {
+  --heat-mid: #8c7b5f;
+  --heat-bar: color-mix(in srgb, var(--orange) 60%, var(--page));
+  container-type: inline-size;
+}
+
+.heat-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* The 12px minimum keeps cells readable on a phone. Below that the grid overflows and the scroll area takes it.
+   The gap is 10% of one column, which is about one cell, kept between 2px and 6px.
+   --cells and --gaps count the tracks the legend swatch has to fit beside (see .heat-legend). */
+.heat-grid {
+  --gap: clamp(2px, calc(100cqw / var(--columns) * 0.1), 6px);
+  --cells: var(--columns);
+  --gaps: var(--columns);
+  display: grid;
+  grid-template-columns: auto repeat(var(--columns), minmax(12px, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  font-size: 11px;
+  color: var(--tan-muted);
+}
+
+/* The hour grid adds a column after the weekdays for the bars, 2.5 cells wide at most. Its bar row is 1.5 cells tall (see .heat-edge-hour). */
+.heat-grid-hours {
+  --cells: calc(var(--columns) + 2.5);
+  --gaps: calc(var(--columns) + 2);
+  grid-template-columns: auto repeat(var(--columns), minmax(12px, 1fr)) minmax(30px, 2.5fr);
+}
+
+.heat-day {
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* Axis labels start at their column's left edge. Text longer than the column runs into the empty gap after it. */
+.heat-axis {
+  justify-self: start;
+  white-space: nowrap;
+}
+
+/* Stretched to its column width, then the ratio sets the height, so every cell is square */
+.heat-cell {
+  aspect-ratio: 1;
+}
+
+/* Cells and legend swatches take one color: a count level in matches and hours modes, a tint in win rate mode.
+   Level 0 is the page color (empty well), levels 1 to 5 mix in more orange. */
+.heat-cell,
+.heat-swatch {
+  background: var(--tint, color-mix(in srgb, var(--orange) calc(var(--level, 0) * 20%), var(--page)));
+}
+
+/* A dark inner rule makes each filled cell read as a tile */
+.heat-cell,
+.heat-swatch {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 35%);
+}
+
+.heat-cell.is-outside {
+  visibility: hidden;
+}
+
+/* Days with no data (after today, or before the first match) are empty outlines, not level 0 */
+.heat-cell.is-blank {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+/* Today has a tan outline in every mode. It is last so it wins over the tile rule. */
+.heat-cell.is-today {
+  box-shadow: inset 0 0 0 1px var(--tan);
+}
+
+/* Calendar days with matches are buttons. The frame goes, so they look like the cells around them. */
+button.heat-cell {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* A win rate from fewer than three results is faint, so a sample of one does not look like a verdict */
+.heat-cell.is-thin,
+.heat-swatch.is-thin {
+  opacity: 0.4;
+}
+
+/* Edge bars: hour bars rise from one baseline at the bottom of their row, weekday bars grow right from the left of their column.
+   Matches mode uses the default bar color. Win rate mode colors them by rate, and their length still means match count. */
+/* The box is the full edge area, and the bar is its ::before, so the bar length scales with the box. Hour boxes are 1.5 cells tall,
+   weekday boxes are 2.5 cells wide and one cell tall. */
+.heat-edge {
+  position: relative;
+}
+
+.heat-edge::before {
+  content: "";
+  position: absolute;
+  background: var(--tint, var(--heat-bar));
+}
+
+.heat-edge-hour {
+  aspect-ratio: 2 / 3;
+}
+
+.heat-edge-hour::before {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--share) * 100%);
+}
+
+.heat-edge-day {
+  aspect-ratio: 5 / 2;
+}
+
+.heat-edge-day::before {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--share) * 100%);
+}
+
+/* Scale under each grid, as the grid's last row so it starts at the first cell column. Swatches match a cell (the grid width
+   less the weekday column and gaps, over the cell tracks), capped at 16px. The 2.5em is a guess at the weekday column width.
+   The row gap is --gap, so the margin adds the rest to make the scale sit 6px under the grid. */
+.heat-legend {
+  --swatch: min(16px, calc((100cqw - 2.5em - var(--gaps) * var(--gap)) / var(--cells)));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-self: start;
+  gap: 6px 16px;
+  margin-top: calc(6px - var(--gap));
+}
+
+/* Swatches on the odd tracks, a 2.5ch gap track between each pair. The cut ticks sit centered on those gaps, one row under the swatches. */
+.heat-key {
+  display: grid;
+  grid-template-columns: repeat(4, var(--swatch) 2.5ch) var(--swatch);
+  row-gap: 3px;
+}
+
+.heat-tick {
+  justify-self: center;
+  white-space: nowrap;
+}
+
+/* A swatch with its label under it */
+.heat-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.heat-step-label {
+  white-space: nowrap;
+}
+
+.heat-swatch {
+  flex: none;
+  width: var(--swatch);
+  height: var(--swatch);
+}
+
+/* The win rate ramp is as tall as a swatch and 120px wide, with the same inset edge as a cell */
+.heat-ramp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* The ramp and the thin swatch share a row, top aligned, so the "<3" label sits on the percent labels' baseline */
+.heat-ramp-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.heat-ramp {
+  width: 120px;
+}
+
+.heat-ramp-labels {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.heat-ramp-labels > span:first-child {
+  justify-self: start;
+}
+
+.heat-ramp-labels > span:last-child {
+  justify-self: end;
+}
+
+/* Summary of the selected year, under the calendar grid. The scroll area below the legend adds 4px, so this is 6px in all. */
+.activity-summary {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--tan-muted);
+}
+
+.activity-modes {
+  display: flex;
+  gap: 6px;
+}
+
+/* The period buttons with the Month select after them. The select wraps under them on narrow screens. */
+.activity-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Per match: four small multiples in one row, stacked two-up on narrow screens */
+.multiples {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.small-multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .multiples {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One column: the stacks disappear (display: contents) and their panels take the order Game modes, Classes, Queue times, Records */
+  .overview-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .overview-split > .stack {
+    display: contents;
+  }
+
+  .modes-panel {
+    order: 1;
+  }
+
+  .classes-panel {
+    order: 2;
+  }
+
+  .queue-panel {
+    order: 3;
+  }
+
+  .records-panel {
+    order: 4;
+  }
+}
+
+@media (max-width: 600px) {
+  .split-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Record value sits under its label instead of fighting it for width */
+  .record-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}

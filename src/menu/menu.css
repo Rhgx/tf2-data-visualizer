@@ -1,0 +1,144 @@
+/* Main menu. The fixed sizes here are the phone and small-window layout. Screens at least 900px wide and 600px tall
+   use TF2's proportions instead (see the media query at the end). */
+#menu-screen { position: relative; display: flex; flex-direction: column; min-height: max(100vh, 600px); }
+
+/* Character art sits behind the menu column. Hidden below 900px wide, where it would cover the buttons. */
+.menu-art { display: none; }
+
+.menu {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100vw - 2 * var(--pad));
+  margin: 24px var(--pad) 0;
+}
+/* The wordmark is wider than 320px at 68px, so the column is 360px wide. */
+.menu-main { display: flex; flex-direction: column; gap: 12px; width: 360px; max-width: 100%; }
+.wordmark {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 6px;
+  color: var(--tan);
+  font: 68px/.9 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #2a2623;
+}
+.wordmark small { color: var(--orange); font-size: 24px; letter-spacing: .06em; }
+.menu-panel { gap: 10px; padding-top: 4px; }
+.menu-hint { margin: 0; color: #8f8372; font-size: 13px; }
+
+/* Help dialog: the UA dialog box is reset so only the panel texture shows. It scrolls when the viewport is short.
+   Its sizes are fixed px (not --u), so it looks the same on wide and narrow screens. */
+.help-modal {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow-y: auto;
+  color: var(--tan);
+  font-size: 13px;
+  line-height: 1.5;
+  background: none;
+  border: 0;
+}
+.help-modal::backdrop { background: rgb(0 0 0 / 55%); }
+.help-panel { gap: 12px; padding-bottom: 12px; }
+.help-steps { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0 4px; list-style: none; }
+/* Each step is one row: the number, then the text with its button inline at the end. The button wraps under the
+   text when the row is too narrow for both. */
+.help-step { display: flex; align-items: flex-start; gap: 10px; }
+/* Step numbers use the HUD style: TF2 Build, muted tan, with the hard dark shadow. */
+.step-number {
+  flex: none;
+  width: 22px;
+  color: var(--tan-muted);
+  font: 22px/1 "TF2 Build", sans-serif;
+  text-align: center;
+  text-shadow: 0 2px 0 #2a2623;
+}
+.step-body { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-width: 0; }
+.step-text { display: flex; flex: 1 1 200px; flex-direction: column; gap: 2px; min-width: 0; }
+.step-title { color: var(--tan); font: 13px "TF2 Build", sans-serif; font-weight: 400; text-transform: uppercase; }
+.step-line, .step-detail { margin: 0; }
+.step-detail { color: var(--tan-muted); }
+/* Keycaps: square TF2 Build keys with a darker bottom edge, like a key glyph. */
+.help-modal kbd {
+  padding: 1px 5px;
+  color: var(--tan);
+  font: 11px/1.4 "TF2 Build", sans-serif;
+  background: #242221;
+  border: 1px solid var(--rule);
+  border-bottom: 2px solid #15130f;
+  border-radius: 0;
+}
+.help-modal code {
+  padding: 0 4px;
+  color: var(--tan);
+  font: 12px/1.4 Consolas, "Courier New", monospace;
+  background: #242221;
+}
+
+.help-details { margin: 0 4px; }
+.help-details summary { color: var(--tan); font: 13px "TF2 Build", sans-serif; text-transform: uppercase; cursor: pointer; }
+.help-details p { margin: 8px 0 0; }
+/* The script is shown as plain text in a scrolling well, so it can be read before it is copied. */
+.help-script {
+  max-height: 240px;
+  margin: 10px 0 0;
+  padding: 4px 8px;
+  color: var(--tan-muted);
+  font: 12px/1.4 Consolas, "Courier New", monospace;
+  white-space: pre;
+}
+
+@media (max-width: 899px) {
+  .wordmark { font-size: 44px; }
+}
+
+/* TF2 proportions (resource/ui/mainmenuoverride.res): the screen is 480 units tall and --u is one unit. The floor keeps
+   screens up to 900px tall at least as large as the fixed sizes above. The media query keeps the layout off short
+   screens, where these sizes would overflow. */
+@media (min-width: 900px) and (min-height: 600px) {
+  #menu-screen { --u: max(calc(100vh / 480), 1.875px); }
+
+  /* TFCharacterImage: xpos c-250, ypos -80, 600 x 600. The wrapper clips the part that runs off the screen. */
+  .menu-art { display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .menu-art img {
+    position: absolute;
+    left: calc(50vw - 52.08vh);
+    top: -16.67vh;
+    width: 125vh;
+    height: 125vh;
+  }
+
+  /* TFLogoImage: xpos c-290, ypos 32, 256 x 64. The button list starts at ypos 120 (button_y), so the gap is 24 units. */
+  .menu {
+    margin: calc(var(--u) * 32) 0 0 max(var(--pad), calc(50vw - var(--u) * 290));
+  }
+  .menu-main { gap: calc(var(--u) * 24); width: calc(var(--u) * 256); }
+  .wordmark {
+    height: calc(var(--u) * 64);
+    margin: 0;
+    font-size: calc(var(--u) * 30);
+    text-shadow: 0 calc(var(--u) * 2) 0 #2a2623;
+  }
+  .wordmark small { font-size: calc(var(--u) * 10); }
+
+  /* Buttons: 26 units tall with 5 between (button_kv tall 26, button_y_delta 5). The text starts 25 units in, with
+     the 14 unit SubImage at 6 units from the left edge. */
+  #menu-screen .menu-panel {
+    gap: calc(var(--u) * 5);
+    padding: calc(var(--u) * 4) calc(var(--u) * 4) calc(var(--u) * 4);
+  }
+  /* Scoped to the main menu's panel: the help dialog is also inside #menu-screen and must keep its fixed sizes. */
+  #menu-screen .menu-panel .tf-button.menu-button {
+    min-height: calc(var(--u) * 26);
+    gap: calc(var(--u) * 5);
+    padding: 0 calc(var(--u) * 6);
+    font-size: calc(var(--u) * 8);
+  }
+  #menu-screen .menu-panel .tf-button.menu-button img { width: calc(var(--u) * 14); height: calc(var(--u) * 14); }
+  #menu-screen .menu-hint { font-size: calc(var(--u) * 7); }
+  /* The footer is 13px in base.css, which is too small on a 4K screen. It is positioned so it paints above the
+     absolutely positioned character art, which would otherwise cover the start of its text. */
+  #menu-screen .dialog-footer { position: relative; z-index: 1; font-size: calc(var(--u) * 7); }
+}

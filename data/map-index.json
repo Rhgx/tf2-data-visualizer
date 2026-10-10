@@ -1,0 +1,712 @@
+{
+  "master_maps_list": {
+    "0": {
+      "name": "Missing"
+    },
+    "1": {
+      "name": "cp_gorge"
+    },
+    "2": {
+      "name": "cp_badlands"
+    },
+    "3": {
+      "name": "cp_vanguard"
+    },
+    "4": {
+      "name": "cp_granary"
+    },
+    "5": {
+      "name": "cp_foundry"
+    },
+    "6": {
+      "name": "cp_gullywash_final1"
+    },
+    "7": {
+      "name": "cp_snakewater_final1"
+    },
+    "8": {
+      "name": "koth_viaduct"
+    },
+    "9": {
+      "name": "cp_gravelpit"
+    },
+    "10": {
+      "name": "cp_dustbowl"
+    },
+    "11": {
+      "name": "cp_well"
+    },
+    "12": {
+      "name": "ctf_2fort"
+    },
+    "13": {
+      "name": "tc_hydro"
+    },
+    "14": {
+      "name": "ctf_well"
+    },
+    "15": {
+      "name": "pl_goldrush"
+    },
+    "16": {
+      "name": "cp_fastlane"
+    },
+    "17": {
+      "name": "ctf_turbine"
+    },
+    "18": {
+      "name": "pl_badwater"
+    },
+    "19": {
+      "name": "cp_steel"
+    },
+    "20": {
+      "name": "cp_egypt_final"
+    },
+    "21": {
+      "name": "cp_junction_final"
+    },
+    "22": {
+      "name": "plr_pipeline"
+    },
+    "23": {
+      "name": "pl_hoodoo_final"
+    },
+    "24": {
+      "name": "koth_sawmill"
+    },
+    "25": {
+      "name": "koth_nucleus"
+    },
+    "26": {
+      "name": "ctf_sawmill"
+    },
+    "27": {
+      "name": "cp_yukon_final"
+    },
+    "28": {
+      "name": "koth_harvest_final"
+    },
+    "29": {
+      "name": "ctf_doublecross"
+    },
+    "30": {
+      "name": "cp_freight_final1"
+    },
+    "31": {
+      "name": "pl_upward"
+    },
+    "32": {
+      "name": "plr_hightower"
+    },
+    "33": {
+      "name": "pl_thundermountain"
+    },
+    "34": {
+      "name": "cp_coldfront"
+    },
+    "35": {
+      "name": "cp_mountainlab"
+    },
+    "36": {
+      "name": "cp_degrootkeep"
+    },
+    "37": {
+      "name": "cp_5gorge"
+    },
+    "38": {
+      "name": "pl_frontier_final"
+    },
+    "39": {
+      "name": "plr_nightfall_final"
+    },
+    "40": {
+      "name": "koth_lakeside_final"
+    },
+    "41": {
+      "name": "koth_badlands"
+    },
+    "42": {
+      "name": "pl_barnblitz"
+    },
+    "43": {
+      "name": "sd_doomsday"
+    },
+    "44": {
+      "name": "koth_king"
+    },
+    "45": {
+      "name": "cp_standin_final"
+    },
+    "46": {
+      "name": "cp_process_final"
+    },
+    "47": {
+      "name": "cp_sunshine"
+    },
+    "48": {
+      "name": "cp_metalworks"
+    },
+    "49": {
+      "name": "pl_swiftwater_final1"
+    },
+    "50": {
+      "name": "pass_brickyard"
+    },
+    "51": {
+      "name": "pass_timbertown"
+    },
+    "52": {
+      "name": "pass_district"
+    },
+    "53": {
+      "name": "ctf_landfall"
+    },
+    "54": {
+      "name": "cp_snowplow"
+    },
+    "55": {
+      "name": "ctf_2fort_invasion"
+    },
+    "56": {
+      "name": "cp_powerhouse"
+    },
+    "57": {
+      "name": "koth_suijin"
+    },
+    "58": {
+      "name": "koth_probed"
+    },
+    "59": {
+      "name": "koth_highpass"
+    },
+    "60": {
+      "name": "pl_cactuscanyon"
+    },
+    "61": {
+      "name": "pl_borneo"
+    },
+    "62": {
+      "name": "pl_snowycoast"
+    },
+    "63": {
+      "name": "pd_watergate"
+    },
+    "64": {
+      "name": "arena_watchtower"
+    },
+    "65": {
+      "name": "arena_offblast_final"
+    },
+    "66": {
+      "name": "arena_badlands"
+    },
+    "67": {
+      "name": "arena_granary"
+    },
+    "68": {
+      "name": "arena_lumberyard"
+    },
+    "69": {
+      "name": "arena_nucleus"
+    },
+    "70": {
+      "name": "arena_ravine"
+    },
+    "71": {
+      "name": "arena_sawmill"
+    },
+    "72": {
+      "name": "arena_well"
+    },
+    "73": {
+      "name": "arena_byre"
+    },
+    "74": {
+      "name": "cp_gorge_event"
+    },
+    "75": {
+      "name": "cp_sunshine_event"
+    },
+    "76": {
+      "name": "koth_moonshine_event"
+    },
+    "77": {
+      "name": "pl_millstone_event"
+    },
+    "78": {
+      "name": "koth_viaduct_event"
+    },
+    "79": {
+      "name": "cp_manor_event"
+    },
+    "80": {
+      "name": "koth_harvest_event"
+    },
+    "81": {
+      "name": "koth_lakeside_event"
+    },
+    "82": {
+      "name": "plr_hightower_event"
+    },
+    "83": {
+      "name": "sd_doomsday_event"
+    },
+    "84": {
+      "name": "rd_asteroid"
+    },
+    "85": {
+      "name": "ctf_foundry"
+    },
+    "86": {
+      "name": "ctf_gorge"
+    },
+    "87": {
+      "name": "ctf_thundermountain"
+    },
+    "88": {
+      "name": "ctf_hellfire"
+    },
+    "89": {
+      "name": "mvm_ghost_town"
+    },
+    "90": {
+      "name": "mvm_mannhattan"
+    },
+    "91": {
+      "name": "mvm_rottenburg"
+    },
+    "92": {
+      "name": "mvm_bigrock"
+    },
+    "93": {
+      "name": "mvm_decoy"
+    },
+    "94": {
+      "name": "mvm_coaltown"
+    },
+    "95": {
+      "name": "mvm_mannworks"
+    },
+    "96": {
+      "name": "tr_dustbowl"
+    },
+    "97": {
+      "name": "tr_target"
+    },
+    "98": {
+      "name": "koth_maple_ridge_event"
+    },
+    "99": {
+      "name": "pl_fifthcurve_event"
+    },
+    "100": {
+      "name": "pd_pit_of_death_event"
+    },
+    "101": {
+      "name": "cp_mercenarypark"
+    },
+    "102": {
+      "name": "cp_mossrock"
+    },
+    "103": {
+      "name": "koth_lazarus"
+    },
+    "104": {
+      "name": "plr_bananabay"
+    },
+    "105": {
+      "name": "pl_enclosure_final"
+    },
+    "106": {
+      "name": "koth_brazil"
+    },
+    "107": {
+      "name": "koth_bagel_event"
+    },
+    "108": {
+      "name": "pl_rumble_event"
+    },
+    "109": {
+      "name": "pd_monster_bash"
+    },
+    "110": {
+      "name": "koth_slasher"
+    },
+    "111": {
+      "name": "pd_cursed_cove_event"
+    },
+    "112": {
+      "name": "koth_slaughter_event"
+    },
+    "113": {
+      "name": "pl_precipice_event_final"
+    },
+    "114": {
+      "name": "koth_megalo"
+    },
+    "115": {
+      "name": "pl_hasslecastle"
+    },
+    "116": {
+      "name": "pl_bloodwater"
+    },
+    "117": {
+      "name": "koth_undergrove_event"
+    },
+    "118": {
+      "name": "pl_pier"
+    },
+    "119": {
+      "name": "pd_snowville_event"
+    },
+    "120": {
+      "name": "ctf_snowfall_final"
+    },
+    "121": {
+      "name": "pl_wutville_event"
+    },
+    "122": {
+      "name": "pd_farmageddon"
+    },
+    "123": {
+      "name": "koth_los_muertos"
+    },
+    "124": {
+      "name": "cp_ambush_event"
+    },
+    "125": {
+      "name": "pl_terror_event"
+    },
+    "126": {
+      "name": "arena_lumberyard_event"
+    },
+    "127": {
+      "name": "koth_synthetic_event"
+    },
+    "128": {
+      "name": "pl_coal_event"
+    },
+    "129": {
+      "name": "pl_breadspace"
+    },
+    "130": {
+      "name": "pl_chilly"
+    },
+    "131": {
+      "name": "koth_cascade"
+    },
+    "132": {
+      "name": "cp_altitude"
+    },
+    "133": {
+      "name": "ctf_doublecross_snowy"
+    },
+    "134": {
+      "name": "koth_sawmill_event"
+    },
+    "135": {
+      "name": "ctf_helltrain_event"
+    },
+    "136": {
+      "name": "plr_hacksaw_event"
+    },
+    "137": {
+      "name": "ctf_crasher"
+    },
+    "138": {
+      "name": "pl_sludgepit_event"
+    },
+    "139": {
+      "name": "cp_spookeyridge"
+    },
+    "140": {
+      "name": "cp_frostwatch"
+    },
+    "141": {
+      "name": "pl_frostcliff"
+    },
+    "142": {
+      "name": "pl_rumford_event"
+    },
+    "143": {
+      "name": "ctf_frosty"
+    },
+    "144": {
+      "name": "cp_gravelpit_snowy"
+    },
+    "145": {
+      "name": "koth_sharkbay"
+    },
+    "146": {
+      "name": "koth_rotunda"
+    },
+    "147": {
+      "name": "pl_phoenix"
+    },
+    "148": {
+      "name": "pl_cashworks"
+    },
+    "149": {
+      "name": "pl_venice"
+    },
+    "150": {
+      "name": "cp_reckoner"
+    },
+    "151": {
+      "name": "cp_sulfur"
+    },
+    "152": {
+      "name": "cp_hardwood_final"
+    },
+    "153": {
+      "name": "ctf_pelican_peak"
+    },
+    "154": {
+      "name": "pd_selbyen"
+    },
+    "155": {
+      "name": "vsh_tinyrock"
+    },
+    "156": {
+      "name": "vsh_distillery"
+    },
+    "157": {
+      "name": "vsh_skirmish"
+    },
+    "158": {
+      "name": "vsh_nucleus"
+    },
+    "159": {
+      "name": "arena_perks"
+    },
+    "160": {
+      "name": "koth_slime"
+    },
+    "161": {
+      "name": "cp_lavapit_final"
+    },
+    "162": {
+      "name": "pd_mannsylvania"
+    },
+    "163": {
+      "name": "cp_degrootkeep_rats"
+    },
+    "164": {
+      "name": "pl_spineyard"
+    },
+    "165": {
+      "name": "pl_corruption"
+    },
+    "166": {
+      "name": "zi_murky"
+    },
+    "167": {
+      "name": "zi_atoll"
+    },
+    "168": {
+      "name": "zi_woods"
+    },
+    "169": {
+      "name": "zi_sanitarium"
+    },
+    "170": {
+      "name": "zi_devastation_final1"
+    },
+    "171": {
+      "name": "koth_snowtower"
+    },
+    "172": {
+      "name": "koth_krampus"
+    },
+    "173": {
+      "name": "ctf_haarp"
+    },
+    "174": {
+      "name": "cp_brew"
+    },
+    "175": {
+      "name": "plr_hacksaw"
+    },
+    "176": {
+      "name": "ctf_turbine_winter"
+    },
+    "177": {
+      "name": "cp_carrier"
+    },
+    "178": {
+      "name": "pd_galleria"
+    },
+    "179": {
+      "name": "pl_emerge"
+    },
+    "180": {
+      "name": "pl_camber"
+    },
+    "181": {
+      "name": "pl_embargo"
+    },
+    "182": {
+      "name": "pl_odyssey"
+    },
+    "183": {
+      "name": "koth_megaton"
+    },
+    "184": {
+      "name": "koth_cachoeira"
+    },
+    "185": {
+      "name": "cp_overgrown"
+    },
+    "186": {
+      "name": "cp_hadal"
+    },
+    "187": {
+      "name": "ctf_applejack"
+    },
+    "188": {
+      "name": "pd_atom_smash"
+    },
+    "189": {
+      "name": "cp_canaveral_5cp"
+    },
+    "190": {
+      "name": "cp_burghausen"
+    },
+    "191": {
+      "name": "koth_toxic"
+    },
+    "192": {
+      "name": "cp_darkmarsh"
+    },
+    "193": {
+      "name": "cp_freaky_fair"
+    },
+    "194": {
+      "name": "tow_dynamite"
+    },
+    "195": {
+      "name": "pd_circus"
+    },
+    "196": {
+      "name": "vsh_outburst"
+    },
+    "197": {
+      "name": "zi_blazehattan"
+    },
+    "198": {
+      "name": "koth_overcast_final"
+    },
+    "199": {
+      "name": "cp_fortezza"
+    },
+    "200": {
+      "name": "ctf_penguin_peak"
+    },
+    "201": {
+      "name": "pl_patagonia"
+    },
+    "202": {
+      "name": "plr_cutter"
+    },
+    "203": {
+      "name": "vsh_maul"
+    },
+    "204": {
+      "name": "pl_citadel"
+    },
+    "205": {
+      "name": "pl_aquarius"
+    },
+    "206": {
+      "name": "cp_fulgur"
+    },
+    "207": {
+      "name": "cp_cargo"
+    },
+    "208": {
+      "name": "cp_conifer"
+    },
+    "209": {
+      "name": "koth_boardwalk"
+    },
+    "210": {
+      "name": "koth_blowout"
+    },
+    "211": {
+      "name": "koth_mannhole"
+    },
+    "212": {
+      "name": "koth_demolition"
+    },
+    "213": {
+      "name": "ctf_pressure"
+    },
+    "214": {
+      "name": "cp_cowerhouse"
+    },
+    "215": {
+      "name": "koth_dusker"
+    },
+    "216": {
+      "name": "arena_afterlife"
+    },
+    "217": {
+      "name": "ctf_doublecross_event"
+    },
+    "218": {
+      "name": "htf_marshlands"
+    },
+    "219": {
+      "name": "pd_nutcracker"
+    },
+    "220": {
+      "name": "cppl_gavle"
+    },
+    "221": {
+      "name": "ctf_sidewinder"
+    },
+    "222": {
+      "name": "2koth_abbey"
+    },
+    "223": {
+      "name": "koth_winter_ridge"
+    },
+    "224": {
+      "name": "plr_matterhorn"
+    },
+    "225": {
+      "name": "koth_dryfield"
+    },
+    "226": {
+      "name": "koth_camp_saxton"
+    },
+    "227": {
+      "name": "koth_shorelight"
+    },
+    "228": {
+      "name": "pl_redwood"
+    },
+    "229": {
+      "name": "cp_premuda"
+    },
+    "230": {
+      "name": "cp_mojave"
+    },
+    "231": {
+      "name": "cp_holyhell"
+    },
+    "232": {
+      "name": "pl_aridpass_event"
+    },
+    "233": {
+      "name": "koth_trainsawlaser"
+    },
+    "234": {
+      "name": "ctf_medi_evil"
+    },
+    "235": {
+      "name": "cp_wildcat_event"
+    }
+  }
+}

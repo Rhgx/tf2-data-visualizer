@@ -1,0 +1,353 @@
+@font-face {
+  font-family: "TF2 Build";
+  src: url("/ui/fonts/tf2build.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TF2 Secondary";
+  src: url("/ui/fonts/tf2secondary.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --page: #1c1a19;
+  --panel: #2a2625;
+  --tan: #ebe2ca;
+  --tan-muted: #b8aa92;
+  --ink: #3e3a35;
+  --gold: #f4d178;
+  --orange: #efb471;
+  --red: #b8383b;
+  --blu: #5885a2;
+  --positive: #99ccff;
+  --negative: #ff4040;
+  --neutral: #b8aa92;
+  --rule: #625a50;
+  --pad: clamp(16px, 5vw, 96px);
+
+  font-family: "TF2 Secondary", Verdana, sans-serif;
+  color: var(--tan);
+  background: var(--page);
+  color-scheme: dark;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 340px;
+  min-height: 100vh;
+  margin: 0;
+  /* The image is picked in index.html. */
+  background: var(--page) center / cover fixed no-repeat;
+}
+
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+/* UI chrome is not text to select: buttons, titles and the wordmark. Button icons can't be dragged out either. */
+button, .wordmark, .panel-title, .filter-item, .tab-button { -webkit-user-select: none; user-select: none; }
+button img { pointer-events: none; }
+.hidden { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Buttons: TF2 main menu style, tan with dark ink, red on hover (MainMenuButton textures). */
+.tf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 2px 10px;
+  color: var(--ink);
+  background: none;
+  border: 8px solid transparent;
+  border-image: url("/ui/button_central.png") 32 fill / 8px;
+  font: 12px/1 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tf-button img { width: 16px; height: 16px; filter: brightness(.25); }
+.tf-button:hover:not(:disabled) { color: var(--tan); border-image-source: url("/ui/button_central_hover.png"); }
+.tf-button:hover:not(:disabled) img { filter: none; }
+/* Pressed, selected and expanded buttons share the depressed texture, like a TF2 toggle. */
+.tf-button:active:not(:disabled),
+.tf-button[aria-pressed="true"],
+.tf-button[aria-selected="true"],
+.tf-button[aria-expanded="true"] { border-image-source: url("/ui/button_central_depressed.png"); }
+.tf-button[aria-selected="true"] { color: var(--tan); }
+/* MainMenuButtonDisabled: its own translucent texture rather than a faded button. */
+.tf-button:disabled { cursor: default; color: #7d7465; border-image-source: url("/ui/button_central_disabled.png"); }
+.tf-button:disabled img { filter: brightness(.5); }
+.icon-button { width: 34px; padding: 0; }
+.tf-button.small-button { min-height: 28px; padding: 0 6px; border-width: 6px; border-image-width: 6px; font-size: 12px; }
+.tf-button.small-button img { width: 14px; height: 14px; }
+.icon-button.small-button { width: 28px; padding: 0; }
+/* Square, the same height as the Back button beside it in the footers (menu-button, 40px). */
+.tf-button.sound-button { width: 40px; min-height: 40px; }
+.sound-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.sound-button .speaker { fill: currentColor; }
+.sound-button[aria-pressed="true"] .cross, .sound-button[aria-pressed="false"] .waves { display: none; }
+/* Keep the raised texture when sound is on so the footer buttons line up; the glyph already shows the state. */
+.sound-button[aria-pressed="true"] { border-image-source: url("/ui/button_central.png"); }
+/* Main menu buttons: a 14px glyph at the left and the text inset (SubButton / SubImage). */
+.tf-button.menu-button { justify-content: flex-start; gap: 10px; min-height: 40px; padding: 2px 8px; font-size: 14px; }
+.tf-button.menu-button img { width: 18px; height: 18px; }
+
+/* Text links share the 12px header type. */
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  color: var(--gold);
+  background: none;
+  border: 0;
+  font: 12px "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.outcome-win { color: var(--positive); }
+.outcome-loss { color: var(--negative); }
+.outcome-tie { color: var(--neutral); }
+.outcome-none { color: var(--tan-muted); }
+/* Team labels are solid blocks of the team color with light text, square corners like TF2's team bars. */
+.team-red, .team-blu {
+  display: inline-block;
+  padding: 0 6px;
+  color: var(--tan);
+  font: 11px/18px "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.team-red { background: var(--red); }
+.team-blu { background: var(--blu); }
+
+/* Panels: MainMenuBGBorder (button_holder_central, 32px corners drawn at 8px) with a title in TF2 Build. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 8px 10px;
+  border: 8px solid transparent;
+  border-image: url("/ui/button_holder_central.png") 32 fill / 8px;
+}
+.panel:has(> .panel-title:only-child) { padding-bottom: 0; }
+.panel-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 34px; }
+.panel-title h2 { margin: 0 auto 0 0; color: #ebe3cb; font: 15px "TF2 Build", sans-serif; text-transform: uppercase; }
+.panel-note { margin: 0; color: var(--tan-muted); font-size: 13px; line-height: 1.4; }
+
+/* Wells: InnerShadowBorder (innershadow_border) for lists and tables. A max-height makes them scroll. */
+.well, .table-wrapper {
+  min-height: 0;
+  overflow: auto;
+  border: 8px solid transparent;
+  border-image: url("/ui/innershadow_border.png") 23 fill / 8px;
+}
+/* A slim thumb instead of the 15px system scrollbar. Chromium ignores these pseudo-elements once scrollbar-width
+   or scrollbar-color is set, so those are only for Firefox. */
+.well::-webkit-scrollbar, .table-wrapper::-webkit-scrollbar, .dialog-body::-webkit-scrollbar { width: 6px; }
+.well::-webkit-scrollbar-button, .table-wrapper::-webkit-scrollbar-button, .dialog-body::-webkit-scrollbar-button { display: none; }
+.well::-webkit-scrollbar-thumb, .table-wrapper::-webkit-scrollbar-thumb, .dialog-body::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 0; }
+@supports not selector(::-webkit-scrollbar) {
+  .well, .table-wrapper, .dialog-body { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+}
+
+/* Responsive grid of panels: --cols is the most columns, one column under 900px. */
+.grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 16px; }
+
+/* Form controls: dark inputs with a square rule border. */
+.field { display: inline-flex; align-items: center; gap: 6px; color: var(--tan-muted); font: 11px/1 "TF2 Build", sans-serif; text-transform: uppercase; }
+/* appearance: none drops the native search field chrome (rounded ends, built-in clear styling). */
+.field select, .field input[type="text"], .field input[type="search"], .search input {
+  appearance: none;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--tan);
+  background-color: #242221;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  outline: 0;
+  font-size: 13px;
+}
+/* Selects lost their arrow with appearance: none, so two 4px triangles stand in for the chevron at the right. */
+.field select {
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--tan-muted) 50%), linear-gradient(-45deg, transparent 50%, var(--tan-muted) 50%);
+  background-position: calc(100% - 11px) 50%, calc(100% - 7px) 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+.field select:focus, .field input:focus, .search input:focus { border-color: var(--orange); }
+.field input::placeholder, .search input::placeholder { color: #8f8372; }
+.search { display: flex; }
+.search input { flex: 1; }
+.field.check { color: var(--tan); font: 13px "TF2 Secondary", Verdana, sans-serif; text-transform: none; cursor: pointer; }
+.field.check input {
+  appearance: none;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  background: #242221;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+.field.check input:checked { background: var(--orange); box-shadow: inset 0 0 0 3px #242221; }
+
+/* HUD numbers: TF2 Build, tan, with the HUD's hard dark shadow. */
+.hud-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hud-value {
+  overflow: hidden;
+  color: var(--tan);
+  font: 32px/1 "TF2 Build", sans-serif;
+  text-overflow: ellipsis;
+  text-shadow: 0 3px 0 #2a2623;
+  white-space: nowrap;
+}
+.hud-label { color: var(--tan-muted); font: 11px/1.2 "TF2 Build", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+
+/* Stats Summary bars: a label, a dark track with a colored fill, then the value. */
+/* One grid for the whole list, so every track starts and ends at the same x. Rows use subgrid to share its columns
+   and stay real boxes, which keeps the list semantics and lets data-tip position its tooltip. */
+.bar-list {
+  display: grid;
+  grid-template-columns: minmax(96px, 200px) minmax(0, 1fr) minmax(40px, auto) auto;
+  gap: 6px 10px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bar-row {
+  --bar-color: var(--tan);
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  font-size: 13px;
+}
+.bar-label { overflow: hidden; color: var(--tan); text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { position: relative; height: 14px; background: #242221; box-shadow: inset 0 1px 0 rgb(0 0 0 / 50%); }
+.bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--value, 0) * 100%);
+  background: var(--bar-color);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 25%);
+}
+.bar-value { color: var(--tan); font: 14px "TF2 Build", sans-serif; text-align: right; }
+.bar-extra { color: var(--tan-muted); font-size: 12px; white-space: nowrap; }
+.bar-extra:empty { display: none; }
+
+/* Canvas wrapper with an explicit height, since Chart.js sizes to its parent. */
+.chart-box { position: relative; min-width: 0; height: var(--h, 260px); }
+
+/* Tables for VirtualTable: sticky TF2 Build header, tan text, subtle striping, and nowrap cells. */
+.table-wrapper { max-height: 480px; }
+.table-wrapper table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.table-wrapper th, .table-wrapper td { padding: 5px 8px; color: var(--tan); text-align: left; white-space: nowrap; }
+.table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 6px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  font: 12px "TF2 Build", sans-serif;
+  text-transform: uppercase;
+}
+/* Fixed data row height, so VirtualTable's row math matches what is drawn. Cells never wrap. */
+.table-wrapper tbody tr { height: 28px; }
+.table-wrapper tbody td { padding: 0 8px; line-height: 26px; overflow: hidden; }
+.table-wrapper tbody tr:nth-child(odd) { background: rgb(235 226 202 / 4%); }
+.table-wrapper tbody tr:hover { background: rgb(235 226 202 / 12%); }
+/* Spacer rows only hold the scroll height: no padding, border, stripe or hover. */
+.table-wrapper tbody tr.vt-spacer { background: none; }
+.table-wrapper tbody tr.vt-spacer td { padding: 0; border: 0; }
+
+/* Striped loading line, shown in the menu while a file is parsed. */
+.loading {
+  padding: 8px 10px;
+  color: var(--tan);
+  background: repeating-linear-gradient(-45deg, #242221 0 10px, #2e2b29 10px 20px) 0 0 / 28px 28px;
+  font: 12px "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  animation: loading 0.6s linear infinite;
+}
+@keyframes loading { to { background-position: 28px 0; } }
+
+/* Footer strip: FooterLine (a 4px rule across the top) over BackgroundFooter (loadout_bottom_gradient). */
+.dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px var(--pad);
+  color: var(--tan-muted);
+  font-size: 13px;
+  background:
+    linear-gradient(#5a4d4a 0 1px, #84756b 1px 3px, #5a4d4a 3px) top / 100% 4px no-repeat,
+    linear-gradient(#3b3630, #2a2625);
+}
+.dialog-footer p { margin: 0 8px 0 auto; }
+.dialog-footer a { color: var(--tan); }
+.dialog-footer a:hover { color: var(--gold); }
+
+/* Tooltip for data-tip elements (src/ui/tooltip.ts): a popover, so it is positioned by the script and sits in the top layer. */
+.item-tooltip {
+  position: fixed;
+  inset: auto;
+  z-index: 60;
+  margin: 0;
+  max-width: 280px;
+  padding: 6px 10px;
+  color: var(--tan);
+  background: none;
+  border: 9px solid transparent;
+  border-image: url("/ui/button_holder_central.png") 32 fill / 9px;
+  font: 13px/1.35 "TF2 Secondary", Verdana, sans-serif;
+  text-align: left;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+/* Drag highlight: the whole page dims and a panel says what will happen. Pointer events pass through to the page. */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(28 26 25 / 80%);
+  pointer-events: none;
+}
+.drop-overlay p {
+  margin: 0;
+  padding: 20px 32px;
+  color: var(--tan);
+  font: 28px/1 "TF2 Build", sans-serif;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #2a2623;
+  border: 12px solid transparent;
+  border-image: url("/ui/button_holder_central.png") 32 fill / 12px;
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .dialog-footer p { flex-basis: 100%; margin: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading { animation: none; }
+}

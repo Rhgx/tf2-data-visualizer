@@ -1,0 +1,156 @@
+/* Full-screen dialog after loading: header (title, filters, tabs), body that takes the rest, footer strip at the bottom. */
+#dashboard { display: flex; flex-direction: column; min-height: 100vh; }
+#dashboard > .dialog-header, #dashboard > .dialog-footer { flex: none; }
+
+/* The header's 4px rule runs along its bottom edge. Tabs sit on it, and the selected tab drops 4px over it so it
+   joins the body, like a TF2 property sheet. The tab row keeps its own bottom padding so that overlap is not clipped
+   by the scroll container. */
+.dialog-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px var(--pad) 0;
+  background:
+    linear-gradient(#5a4d4a 0 1px, #84756b 1px 3px, #5a4d4a 3px) bottom / 100% 4px no-repeat,
+    linear-gradient(#3b3630, #2a2625);
+}
+.dialog-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.dialog-title {
+  margin: 0 auto 0 0;
+  color: var(--tan);
+  font: 28px/1 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #2a2623;
+}
+.tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+/* Property-sheet tabs: dark tabs with a rule border. The selected tab is lighter and drops over the header rule. */
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 14px;
+  color: var(--tan-muted);
+  background: #2a2625;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  font: 12px/1 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tab-button:hover { color: var(--tan); background: #33302d; }
+.tab-button[aria-selected="true"] { margin-bottom: -4px; color: var(--tan); background: #3e3a35; border-bottom: 0; }
+
+.dialog-body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px var(--pad);
+  overflow-y: auto;
+  background: rgb(28 26 25 / 88%);
+}
+.tab-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* Filter strip in the header: the clear link and the shown count sit before the three dropdown triggers, so the
+   strip grows to the left and the triggers (and their open panels) stay where they are when filters change. */
+.filter-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.filter-group { position: relative; }
+.filter-trigger::after {
+  content: "";
+  margin-left: 2px;
+  border: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  border-bottom: 0;
+}
+/* Digits are tabular and the width is fixed, so the count's text changing does not move the link beside it. */
+.filter-count {
+  min-width: 19ch;
+  color: var(--tan-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Dropdown: the panel texture (button_holder_central) over the page, opening under its trigger.
+   Panels hang from the trigger's right edge because the strip sits at the right end of the header, so a
+   left-anchored panel from a right-hand trigger would run off the viewport. */
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, calc(100vw - 2 * var(--pad)));
+  padding: 6px 8px 8px;
+  border: 12px solid transparent;
+  border-image: url("/ui/button_holder_central.png") 32 fill / 12px;
+  font-size: 13px;
+}
+.filter-list { display: flex; flex-direction: column; gap: 2px; max-height: 50vh; padding: 2px; }
+.filter-empty { padding: 4px; }
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 26px;
+  padding: 2px 8px;
+  color: var(--tan-muted);
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.filter-item:hover { color: var(--tan); background: rgb(235 226 202 / 6%); }
+.filter-item[data-state="include"] { color: var(--tan); background: rgb(153 204 255 / 10%); }
+.filter-item[data-state="exclude"] { color: var(--tan); background: rgb(255 64 64 / 10%); }
+.filter-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-prefix { margin-left: auto; color: #8f8372; font-size: 12px; }
+
+/* Tri-state box: off is empty, include is a positive check, exclude is a negative cross. */
+.filter-state { position: relative; flex: none; width: 12px; height: 12px; background: #242221; border: 1px solid var(--rule); }
+.filter-item[data-state="include"] .filter-state { border-color: var(--positive); }
+.filter-item[data-state="include"] .filter-state::after {
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--positive);
+  border-width: 0 2px 2px 0;
+  content: "";
+  transform: rotate(45deg);
+}
+.filter-item[data-state="exclude"] .filter-state { border-color: var(--negative); }
+.filter-item[data-state="exclude"] .filter-state::before,
+.filter-item[data-state="exclude"] .filter-state::after {
+  position: absolute;
+  top: 4px;
+  left: 1px;
+  width: 8px;
+  height: 2px;
+  background: var(--negative);
+  content: "";
+}
+.filter-item[data-state="exclude"] .filter-state::before { transform: rotate(45deg); }
+.filter-item[data-state="exclude"] .filter-state::after { transform: rotate(-45deg); }
+
+@media (max-width: 900px) {
+  .dialog-title { font-size: 22px; }
+}
+
+@media (max-width: 600px) {
+  .dialog-title { font-size: 20px; }
+  /* Filter panels open under the whole strip, since a middle trigger's panel would run off a phone screen. */
+  .filter-strip { position: relative; }
+  .filter-group { position: static; }
+}
