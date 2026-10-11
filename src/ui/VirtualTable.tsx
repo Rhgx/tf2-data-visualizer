@@ -1,4 +1,5 @@
-import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type UIEvent } from "react";
+import { Fragment, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type Ref, type UIEvent } from "react";
+import { BUFFER, ROW_HEIGHT, moveTarget, rowTopFor, windowStartFor } from "./tableWindow";
 import "./ui.css";
 
 export interface Column<T> {
@@ -17,24 +18,31 @@ export interface Column<T> {
 }
 
 export interface VirtualTableHandle {
-  // Scrolls the row near the middle of the viewport and renders it
-  scrollToRow: (index: number) => void;
+  // Scrolls the row near the middle of the viewport and renders it. With focus, the row is focused once it is rendered.
+  scrollToRow: (index: number, options?: { focus?: boolean }) => void;
 }
 
 interface VirtualTableProps<T> {
   // Keep rows and columns memoized. A new rows array resets the scroll to the top, and a new columns array re-measures every column.
   rows: T[];
+  // Rows the column widths are measured from. Defaults to rows. Pass a stable superset (e.g. every match, unfiltered) so a
+  // filter or search never re-measures and widths hold still.
+  sizingRows?: T[];
   columns: Column<T>[];
   rowKey: (row: T) => string;
   rowClassName?: (row: T, index: number) => string;
   className?: string;
   ref?: Ref<VirtualTableHandle>;
+  // Optional row expansion. Clicking a row, or pressing Enter or Space on it, calls onToggle. The row whose key is
+  // expandedKey shows renderDetail in a strip under it. Only one row is open.
+  expandedKey?: string | null;
+  onToggle?: (row: T) => void;
+  renderDetail?: (row: T) => ReactNode;
+  // Set when the rows select instead of expand (onToggle picks one). The row whose key is selectedKey gets aria-selected,
+  // and rows get no aria-expanded. Leave it unset for expandable rows.
+  selectedKey?: string | null;
 }
 
-// Fixed by ".table-wrapper tbody tr" in base.css, so the row math matches what is drawn
-const ROW_HEIGHT = 28;
-// Rows rendered above and below the viewport, so quick scrolling does not show blank space
-const BUFFER = 8;
 // Used until the wrapper has a height, e.g. while its tab is hidden
 const FALLBACK_VIEWPORT = 400;
 // Left and right padding of each cell in base.css
@@ -99,25 +107,122 @@ function measureColumns<T>(
   });
 }
 
-// First rendered row for a scroll offset, with the buffer above it
-function windowStartFor(scrollTop: number): number {
-  return Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+// Ends a slide when no transitionend comes, e.g. in a hidden tab. The slides run 180 ms (open) and 220 ms (close).
+const SLIDE_FALLBACK_MS = 300;
+
+// True when the OS asks for less motion. Read when it is needed, so the next open or close follows the setting.
+export function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function VirtualTable<T>({ rows, columns, rowKey, rowClassName, className, ref }: VirtualTableProps<T>) {
+interface DetailStripProps {
+  open: boolean;
+  // True while this strip is sliding. Any other strip, e.g. one scrolled back into the window, is drawn at its final size.
+  sliding: boolean;
+  onSlideEnd: () => void;
+  // Only the open strip is measured, so a closing strip does not take the measuring ref away from it
+  contentRef?: Ref<HTMLDivElement>;
+  children: ReactNode;
+}
+
+// The strip under a row. It mounts closed and opens on the layout pass after mount, so the open transition starts from 0.
+// Its content is measured by contentRef, not the clip, since the clip's height is the animated one.
+function DetailStrip({ open, sliding, onSlideEnd, contentRef, children }: DetailStripProps) {
+  const slide = useRef<HTMLDivElement>(null);
+  // A strip that is not sliding starts at its final state, so it does not animate when the window scrolls back to it
+  const [shown, setShown] = useState(open && !sliding);
+  useLayoutEffect(() => {
+    // Reading the layout applies the closed style first, so the change below animates instead of snapping open
+    if (open && sliding) slide.current?.getBoundingClientRect();
+    setShown(open);
+  }, [open, sliding]);
+
+  return (
+    <div
+      ref={slide}
+      className={shown ? "vt-detail-slide is-open" : "vt-detail-slide"}
+      onTransitionEnd={(event) => {
+        if (sliding && event.target === event.currentTarget) onSlideEnd();
+      }}
+    >
+      <div className="vt-detail-clip">
+        <div ref={contentRef}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export function VirtualTable<T>({
+  rows,
+  sizingRows,
+  columns,
+  rowKey,
+  rowClassName,
+  className,
+  ref,
+  expandedKey,
+  onToggle,
+  renderDetail,
+  selectedKey,
+}: VirtualTableProps<T>) {
+  const selecting = selectedKey !== undefined;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
   // Scrolling re-renders only when the first visible row changes. The viewport height changes only on resize.
   const [windowStart, setWindowStart] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [widths, setWidths] = useState<number[]>([]);
+  // The open row's strip height. Its fields wrap with the width, so it is measured rather than fixed.
+  const [detailHeight, setDetailHeight] = useState(0);
   // A new object per call, so asking for the same row twice still scrolls to it
-  const [scrollRequest, setScrollRequest] = useState<{ index: number } | null>(null);
+  const [scrollRequest, setScrollRequest] = useState<{ index: number; focus: boolean } | null>(null);
+  // The row to focus once it is rendered, set by a key move or a scroll request with focus
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  // The row Tab lands on. A click, focus or key move sets it. Until then it is the open or selected row, else the first.
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  // The open row's place in rows, or -1. It counts toward the scroll height even when its strip is not rendered.
+  const expandedIndex = expandedKey == null ? -1 : rows.findIndex((row) => rowKey(row) === expandedKey);
+  // The only row with tabIndex 0, so Tab walks out of the table instead of through every rendered row
+  const activeIndex = Math.max(0, rows.findIndex((row) => rowKey(row) === (activeKey ?? expandedKey ?? selectedKey)));
+
+  // The strips in motion. opening is the open strip sliding open after a click. closing is a strip sliding shut: after a
+  // close, or after a switch away from it, where the new strip opens at the same time. At most one of each.
+  const [opening, setOpening] = useState<string | null>(null);
+  const [closing, setClosing] = useState<string | null>(null);
+  const openKey = expandedKey ?? null;
+  const [shownKey, setShownKey] = useState<string | null>(openKey);
+  // Compared during render, so a change is seen in the same commit that clears or moves expandedKey and no strip flashes out.
+  // The strip that was open slides shut, unless reduced motion asks for an instant change or its row left the list.
+  // setClosing replaces any strip still closing, so a click during a slide drops that strip at once.
+  if (openKey !== shownKey) {
+    setShownKey(openKey);
+    const reduced = prefersReducedMotion();
+    const leaving = shownKey !== null && !reduced && rows.some((row) => rowKey(row) === shownKey) ? shownKey : null;
+    setClosing(leaving);
+    setOpening(openKey !== null && !reduced ? openKey : null);
+  }
+  // Ends a slide the strip does not report, so no strip stays mounted. Each slide gets its own timer.
+  useEffect(() => {
+    if (opening === null) return;
+    const timer = window.setTimeout(() => setOpening(null), SLIDE_FALLBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [opening]);
+  useEffect(() => {
+    if (closing === null) return;
+    const timer = window.setTimeout(() => setClosing(null), SLIDE_FALLBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [closing]);
+  // A strip's slide ended. Clears only the state that names this row, so a late event cannot clear another strip's slide.
+  const endSlide = (key: string) => {
+    setOpening((current) => (current === key ? null : current));
+    setClosing((current) => (current === key ? null : current));
+  };
 
   useImperativeHandle(
     ref,
     () => ({
-      scrollToRow: (index: number) => setScrollRequest({ index }),
+      scrollToRow: (index: number, options?: { focus?: boolean }) => setScrollRequest({ index, focus: options?.focus ?? false }),
     }),
     []
   );
@@ -148,23 +253,63 @@ export function VirtualTable<T>({ rows, columns, rowKey, rowClassName, className
     };
   }, []);
 
+  const sizing = sizingRows ?? rows;
+  // A visible table measures every column in one pass, so its widths arrive with its rows. A hidden table (a tab that is
+  // warming up in idle time) measures one column per frame, so a filter change never holds one task for all the columns.
   useLayoutEffect(() => {
     const table = tableRef.current;
     if (!table) return;
     if (widthCache.current.version !== fontsVersion) {
       widthCache.current = { version: fontsVersion, widths: new Map<string, Map<string, number>>() };
     }
-    setWidths(measureColumns(table, columns, rows, widthCache.current.widths));
-  }, [rows, columns, fontsVersion]);
+    const cache = widthCache.current.widths;
+    if (table.offsetParent !== null) {
+      setWidths(measureColumns(table, columns, sizing, cache));
+      return;
+    }
+    if (columns.length === 0) return;
+    let index = 0;
+    let frame = 0;
+    const measureNext = () => {
+      // The updater runs after index has moved on, so this step's column is kept in its own constant
+      const at = index;
+      const [width] = measureColumns(table, columns.slice(at, at + 1), sizing, cache);
+      setWidths((previous) => {
+        const next = previous.slice();
+        next[at] = width;
+        return next;
+      });
+      index += 1;
+      if (index < columns.length) frame = requestAnimationFrame(measureNext);
+    };
+    frame = requestAnimationFrame(measureNext);
+    // A new rows or columns set, or unmounting, drops the columns still waiting for their frame
+    return () => cancelAnimationFrame(frame);
+  }, [sizing, columns, fontsVersion]);
 
   // Declared after the reset, so a request made in the same batch as a new data set still lands on its row
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current;
     if (!scrollRequest || !wrapper) return;
-    const offset = scrollRequest.index * ROW_HEIGHT - (wrapper.clientHeight - ROW_HEIGHT) / 2;
+    const offset = rowTopFor(scrollRequest.index, expandedIndex, detailHeight) - (wrapper.clientHeight - ROW_HEIGHT) / 2;
     wrapper.scrollTop = Math.max(0, offset);
-    setWindowStart(windowStartFor(wrapper.scrollTop));
+    setWindowStart(windowStartFor(wrapper.scrollTop, expandedIndex, detailHeight));
+    if (scrollRequest.focus) setFocusIndex(scrollRequest.index);
   }, [scrollRequest]);
+
+  // The window follows the open row and its strip height, so a strip that opens, moves or resizes while the table is
+  // scrolled re-places the rows. Runs before paint, like the scroll request above.
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (wrapper) setWindowStart(windowStartFor(wrapper.scrollTop, expandedIndex, detailHeight));
+  }, [expandedIndex, detailHeight]);
+
+  // Focuses the row once the window has rendered it. The window is set in the same batch as focusIndex, so it is there.
+  useLayoutEffect(() => {
+    if (focusIndex === null) return;
+    tableRef.current?.querySelector<HTMLTableRowElement>(`tbody tr[data-index="${focusIndex}"]`)?.focus({ preventScroll: true });
+    setFocusIndex(null);
+  }, [focusIndex, windowStart]);
 
   // A table built in a hidden tab gets its height when the tab opens, and no scroll event fires for that
   useEffect(() => {
@@ -176,15 +321,89 @@ export function VirtualTable<T>({ rows, columns, rowKey, rowClassName, className
   }, []);
 
   function handleScroll(event: UIEvent<HTMLDivElement>) {
-    setWindowStart(windowStartFor(event.currentTarget.scrollTop));
+    setWindowStart(windowStartFor(event.currentTarget.scrollTop, expandedIndex, detailHeight));
   }
 
   // Rows outside the window are replaced by two spacer rows, so the scrollbar covers the whole list
   const visibleCount = Math.ceil((viewportHeight || FALLBACK_VIEWPORT) / ROW_HEIGHT) + BUFFER * 2;
   const end = Math.min(rows.length, windowStart + visibleCount);
-  const topPad = windowStart * ROW_HEIGHT;
-  const bottomPad = Math.max(0, (rows.length - end) * ROW_HEIGHT);
+  const topPad = windowStart * ROW_HEIGHT + (expandedIndex !== -1 && expandedIndex < windowStart ? detailHeight : 0);
+  const bottomPad = Math.max(0, (rows.length - end) * ROW_HEIGHT + (expandedIndex >= end ? detailHeight : 0));
   const visible = rows.slice(windowStart, end);
+  const closingIndex = closing === null ? -1 : rows.findIndex((row) => rowKey(row) === closing);
+
+  // Re-measured when the strip mounts or moves to another row, and on each resize of it after that. Rows below the
+  // open row are placed by this height, so a stale height would shift them.
+  const detailShown = expandedIndex >= windowStart && expandedIndex < end;
+  useLayoutEffect(() => {
+    const detail = detailRef.current;
+    if (!detail) return;
+    const measure = () => setDetailHeight(detail.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(detail);
+    return () => observer.disconnect();
+  }, [expandedKey, detailShown]);
+
+  // A strip above the open row shrinks into the space above it, which pulls the open row up by the same amount each frame.
+  // Each frame scrolls up by that shrink, so the open row stays where it was on screen. Clamped at the top, where the row may
+  // move a little. Layout effects run before paint, so the frame that paints already has the scroll.
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    const table = tableRef.current;
+    if (!wrapper || !table || closingIndex === -1 || expandedIndex === -1 || closingIndex >= expandedIndex) return;
+    const closingSlide = () => table.querySelector<HTMLElement>(`tr[data-index="${closingIndex}"] + tr.vt-detail .vt-detail-slide`);
+    // Read here, before the closing transition has moved, so the first frame's shrink is counted
+    let previous = closingSlide()?.getBoundingClientRect().height ?? 0;
+    // Kept as a running target, not read back from scrollTop, which snaps to whole pixels. Reading it back would add up that rounding.
+    let target = wrapper.scrollTop;
+    let frame = 0;
+    const follow = () => {
+      const height = closingSlide()?.getBoundingClientRect().height ?? 0;
+      const shrink = previous - height;
+      if (shrink > 0) {
+        target = Math.max(0, target - shrink);
+        wrapper.scrollTop = target;
+        setWindowStart(windowStartFor(wrapper.scrollTop, expandedIndex, detailHeight));
+      }
+      previous = height;
+      if (height > 0) frame = requestAnimationFrame(follow);
+    };
+    frame = requestAnimationFrame(follow);
+    return () => cancelAnimationFrame(frame);
+  }, [closingIndex, expandedIndex, detailHeight]);
+
+  // Moves the active row and focuses it once it is rendered. Scrolls only as far as the row needs, and the sticky header
+  // covers the top of the viewport, so a row is kept below it.
+  function moveActive(index: number) {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const header = tableRef.current?.tHead?.offsetHeight ?? 0;
+    const top = rowTopFor(index, expandedIndex, detailHeight);
+    if (top < wrapper.scrollTop) {
+      wrapper.scrollTop = top;
+    } else if (top + ROW_HEIGHT > wrapper.scrollTop + wrapper.clientHeight - header) {
+      wrapper.scrollTop = top + ROW_HEIGHT - (wrapper.clientHeight - header);
+    }
+    setWindowStart(windowStartFor(wrapper.scrollTop, expandedIndex, detailHeight));
+    setActiveKey(rowKey(rows[index]));
+    setFocusIndex(index);
+  }
+
+  // Enter and Space toggle. Space would scroll the table, so it is taken for the toggle too.
+  function handleRowKey(event: KeyboardEvent<HTMLTableRowElement>, row: T, index: number) {
+    if (!onToggle) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onToggle(row);
+      return;
+    }
+    const page = Math.max(1, Math.floor(viewportHeight / ROW_HEIGHT) - 1);
+    const target = moveTarget(event.key, index, page, rows.length);
+    if (target === null) return;
+    event.preventDefault();
+    moveActive(target);
+  }
 
   return (
     <div
@@ -213,12 +432,41 @@ export function VirtualTable<T>({ rows, columns, rowKey, rowClassName, className
           </tr>
           {visible.map((row, offset) => {
             const index = windowStart + offset;
+            const key = rowKey(row);
+            const open = index === expandedIndex;
+            const closingRow = closing === key;
             return (
-              <tr key={rowKey(row)} className={rowClassName?.(row, index)}>
-                {columns.map((column) => (
-                  <td key={column.key}>{column.render ? column.render(row) : cellText(column, row)}</td>
-                ))}
-              </tr>
+              <Fragment key={key}>
+                <tr
+                  data-index={index}
+                  className={rowClassName?.(row, index)}
+                  tabIndex={onToggle ? (index === activeIndex ? 0 : -1) : undefined}
+                  aria-expanded={onToggle && !selecting ? open : undefined}
+                  aria-selected={selecting ? key === selectedKey : undefined}
+                  onClick={onToggle ? () => onToggle(row) : undefined}
+                  onFocus={onToggle ? () => setActiveKey(key) : undefined}
+                  onKeyDown={onToggle ? (event) => handleRowKey(event, row, index) : undefined}
+                >
+                  {columns.map((column) => (
+                    <td key={column.key}>{column.render ? column.render(row) : cellText(column, row)}</td>
+                  ))}
+                </tr>
+                {(open || closingRow) && renderDetail && (
+                  // A closing strip is inert, so its links cannot be focused or clicked while it slides shut
+                  <tr className="vt-detail" inert={!open}>
+                    <td colSpan={columns.length}>
+                      <DetailStrip
+                        open={open}
+                        sliding={opening === key || closingRow}
+                        onSlideEnd={() => endSlide(key)}
+                        contentRef={open ? detailRef : undefined}
+                      >
+                        {renderDetail(row)}
+                      </DetailStrip>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             );
           })}
           <tr className="vt-spacer" style={{ height: bottomPad }}>

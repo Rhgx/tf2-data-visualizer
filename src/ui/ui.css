@@ -1,2 +1,36 @@
 /* VirtualTable sets column widths on its colgroup, so the table needs fixed layout to keep them. base.css only sets its width. */
 .vt-table { table-layout: fixed; }
+
+/* The detail strip slides by its grid row going from 0fr to 1fr, so the height follows the content with no px value. The clip
+   hides the content while the row is partly open. A transition takes its timing from the state it moves to, so the base rule
+   is the 220 ms ease-in close and .is-open is the 180 ms ease-out open. */
+.vt-detail-slide {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms ease-in;
+}
+
+.vt-detail-slide.is-open {
+  grid-template-rows: 1fr;
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+
+.vt-detail-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-detail-slide,
+  .vt-detail-slide.is-open {
+    transition: none;
+  }
+}
+
+/* Country flag before a location name. The Twemoji SVGs are square and the flag is painted from y 5 to 31 of 36, so a 1em box
+   paints a flag about cap-height tall. The row it sits in centers it and sets the gap (see .match-datacenter). */
+.flag {
+  width: 1em;
+  height: 1em;
+}
