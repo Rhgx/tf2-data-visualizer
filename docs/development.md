@@ -1,129 +1,118 @@
 # Development
 
-## Project layout
+## Running it locally
 
-```
-index.html           shell: head (font and image preloads), the menu background script, and the #root element
-package.json         scripts, and the pnpm version pinned in packageManager
-pnpm-lock.yaml       the lockfile; install with pnpm, not npm
-vite.config.ts       React plugin, and a relative base so the build works under GitHub Pages
-tsconfig.json        type check for src/
-tsconfig.node.json   type check for vite.config.ts and scripts/map-data/*.ts
-LICENSE              MIT, for the code only
-.github/
-  workflows/ci.yml   build on pushes to main and on pull requests; deploy to GitHub Pages on pushes to main
-data/
-  map-index.json     map names keyed by map_index (imported at build time)
-  map-modes.json     map file name to game mode (imported at build time)
-docs/
-  development.md     this file: layout, data flow, styling and notes
-  components.md      tab component API and shared UI components
-  overview.md        the Overview tab charts
-  data.md            the match data contract
-  map-data.md        refreshing the map data
-  badges.md          updating the README badges
-  screenshot.webp    the README screenshot, made from synthetic data
-  badges/            README badges, written by scripts/make-badges.py
-public/ui/           TF2 assets copied from the game files, served as-is (see README credits)
-  fonts/             tf2build.woff2 (headings) and tf2secondary.woff2 (body text), every glyph kept; make-badges.py reads them
-  glyphs/            tab, button and CSV icons
-  sfx/               buttonclick.wav, the click on TF2 controls (see README credits)
-  classes/           class icons for the Classes column and panel
-  characters/        menu character art
-  console/           menu backgrounds and holiday title art
-  button_*.png, innershadow_border.png, button_holder_central.png
-                     panel, button and well textures used by base.css
-scripts/
-  fetcher.js         the console script copied from the help dialog (plain JS, not type checked; imported as raw text)
-  map-data/          refreshes both data files (see map-data.md)
-    cli.ts           the pnpm maps entry point: options, writing both files together, and the two steps
-    maps.ts          map names from items_game.txt
-    modes.ts         map modes from the TF2 Wiki's List of maps
-  make-badges.py     regenerates docs/badges/ (see badges.md)
-src/
-  main.tsx           entry point: base.css, the tooltip and sound scripts, then createRoot(#root)
-  App.tsx            screen state (menu or dashboard), loading from the picker, drop or paste, error alerts, drop overlay; loads the dashboard chunk lazily
-  styles/
-    base.css         tokens, buttons, panels, wells, grids, forms, bars, tables, footer, tooltip, drop overlay
-  ui/
-    Button.tsx       TfButton and TextButton
-    Panel.tsx        Panel and PanelNote
-    Field.tsx        SelectField, SearchField and CheckField
-    HudStat.tsx      large number with a label
-    BarList.tsx      BarList and BarRow for the bar charts
-    VirtualTable.tsx windowed table that renders only the visible rows
-    tooltip.ts       the shared data-tip tooltip; imported once for its listeners
-    sound.ts         the button click sound and the mute state; imported once for its document listener, fetches the sound on the first unmuted gesture
-    SoundButton.tsx  the mute toggle in both footers
-    ui.css           VirtualTable's table layout
-  charts/
-    theme.ts         palette, barColor, monthKey, monthLabel; no Chart.js import here
-    Chart.tsx        Chart.js registration and dark theme defaults, reduced motion, and ChartCanvas, a React wrapper around one Chart.js canvas
-  data/
-    csv.ts           CsvRow type, parseCsv (runs the worker), column and value helpers
-    csv.worker.ts    PapaParse inside a module worker; quote and field-count errors fail the upload, blank lines are dropped
-    match.ts         Match type: one CSV row with numbers and names resolved once (toMatches, kdRatio, winRate)
-    maps.ts          map names and game modes, from data/*.json
-  lib/
-    format.ts        formatting (formatNumber, formatShortDuration, formatHours, formatMatchTime) and getElement
-    idle.ts          whenIdle, an idle callback with a timeout fallback, for the dashboard prefetch and the tab warm-up
-  menu/
-    MainMenu.tsx     the menu: wordmark, Load Match History, the help button, the drop and paste hint
-    HelpDialog.tsx   the "How do I get my data?" dialog with the copy script button; the script loads on the first open
-    characters.ts    picks the menu character art for this page load
-    menu.css         menu and help dialog styles
-  dashboard/
-    Dashboard.tsx    header (title, filter strip, tabs), the three tab sections, footer with << Back; Maps and Matches are filled in one at a time while idle, so their first open is cheap
-    FilterMenu.tsx   one tri-state dropdown: button, search, list
-    filters.ts       FilterState type, item lists, cycleItemState, applyFilters (pure)
-    dashboard.css    header, tabs, filter strip and dropdown styles
-  overview/
-    OverviewTab.tsx  the Overview tab; lays out the panels below
-    HudStrip.tsx     the five HUD numbers at the top
-    ResultsPanel.tsx outcome bar, RED and BLU columns
-    ActivityPanel.tsx matches per day calendar with a year selector, and the weekday by hour grids; the Matches / Hours / Win rate toggle is on the calendar
-    FormPanel.tsx    monthly win rate and K/D lines, with matches per month as bars
-    PerMatchPanel.tsx monthly averages per match for kills, deaths, damage and healing
-    monthLine.ts     chart helpers shared by FormPanel and PerMatchPanel: gap segments, low-sample points, tooltips
-    GameModesPanel.tsx matches per game mode
-    ClassesPanel.tsx matches per class
-    QueuePanel.tsx   queue time histogram, with bins picked from the data
-    RecordsPanel.tsx records, each with a View link to its match
-    RecordList.tsx   the row list used by ResultsPanel, QueuePanel and RecordsPanel
-    Heatmap.tsx      the grid, legend and edge bars used by ActivityPanel
-    UntimedNote.tsx  the note for matches without a timestamp
-    stats.ts         pure calculations for the Overview tab, including heat levels and the queue time bins
-    overview.css     Overview tab styles
-  maps/
-    MapsTab.tsx      the Maps tab: controls, state, and the charted and sorted lists
-    MapsHud.tsx      the four HUD numbers for the Maps tab
-    MapsChartPanel.tsx the top maps bar chart and its controls
-    MapDetailsPanel.tsx the map details table
-    stats.ts         per-map totals and the chart and table sort orders
-    maps.css         Maps tab styles
-  matches/
-    MatchesTab.tsx   the Matches tab: rank, order, search, all columns, and focus handling
-    ScoreboardControls.tsx the header controls of the scoreboard
-    columns.tsx      the default columns and the raw CSV columns for "All columns"
-    sort.ts          rank options, the search filter and the sort
-    matches.css      Matches tab styles
+With Node.js 26 and pnpm 11.3.0 (the version pinned in `package.json`):
+
+```sh
+git clone https://github.com/Rhgx/tf2-data-visualizer.git
+cd tf2-data-visualizer
+pnpm install --ignore-workspace
+pnpm dev
 ```
 
-`dist/` and `node_modules/` are build output and dependencies, and are not committed.
+If pnpm finds a workspace above this folder, add `--ignore-workspace` to each command.
+
+## Layout
+
+- `src/` is the React app. `App.tsx` switches between the menu and the dashboard. The `menu/`, `dashboard/`, `overview/`, `maps/`, and `matches/` folders hold the screens and tabs, and `ui/`, `charts/`, `data/`, `lib/`, and `styles/` hold the shared code.
+- `scripts/` holds the maintainer tools: the map data refresh (`map-data/`), the datacenter refresh, the badge generator, and `fetcher.js`, the console script the help dialog copies.
+- `public/` holds the TF2 art, sounds, fonts, and flags under `public/ui/`, copied into the build as they are.
+- `data/` holds the JSON files the app imports at build time: map names, map modes, and datacenters. The scripts below write them.
+- `docs/` holds these docs, the README screenshot, and the badges.
+
+## Scripts
+
+| Command            | What it does                                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| `pnpm dev`         | Starts the Vite dev server at http://127.0.0.1:5173 with hot reload.                               |
+| `pnpm build`       | Type-checks the app, the Vite config, and the scripts, then builds the site into `dist/`.          |
+| `pnpm preview`     | Serves the last build in `dist/` at 127.0.0.1.                                                     |
+| `pnpm maps`        | Rebuilds `data/map-index.json` and `data/map-modes.json` (see [Updating the map list](#updating-the-map-list)). |
+| `pnpm datacenters` | Rebuilds `data/datacenters.json` and the flags in `public/ui/flags/` (see [Updating datacenter names](#updating-datacenter-names)). |
 
 ## How a file moves through the app
 
-1. `App.tsx` receives a file from the picker in `MainMenu`, a drop anywhere on the page, or pasted CSV text, and calls `parseCsv`. In the same step it starts the `data/match` and `dashboard/Dashboard` imports, so those chunks download while the worker parses.
+1. `App.tsx` gets a file from the picker in `menu/MainMenu.tsx`, a drop anywhere on the page, or pasted CSV text, and calls `parseCsv`. In the same step it starts the `data/match.ts` and `dashboard/Dashboard.tsx` imports, so those chunks download while the worker parses.
 2. `data/csv.ts` starts a worker per upload. The worker parses with PapaParse and returns rows of strings.
-3. `toMatches` turns the rows into `Match` objects: numbers parsed, outcome and team read, map and mode resolved, classes decoded, time played computed.
+3. `toMatches` turns the rows into `Match` objects: numbers parsed, outcome and team read, map and mode resolved, classes decoded, and time played computed.
 4. `App.tsx` keeps the matches once both the parse and the chunks are ready, then renders `Dashboard` with a key that changes on every load, so each upload starts with no filters, an empty search, and the Overview tab. The menu stays up until the dashboard can render.
-5. `Dashboard` applies the three tri-state filters with `applyFilters` (Maps by `mapId`, Modes by `mode`, Type by `type`). Include lists keep only the listed values, exclude lists drop them.
-6. The active tab gets the latest filtered matches, and switching to a tab shows the current list in the same render. A hidden tab keeps the matches it last had. Maps and Matches are also filled in while the browser is idle, after load and after each filter change, so opening them is quick. The tab components are wrapped in `memo`, so a header search that does not change the matches does not re-render them.
+5. `Dashboard` applies the three tri-state filters with `applyFilters` (Maps by `mapId`, Modes by `mode`, Type by `type`). Include lists keep only the listed values, and exclude lists drop them. The open dropdown's per-item counts come from one `countItems` pass over the matches.
+6. The active tab gets the latest filtered matches through `useDeferredValue`, so a click updates the filter controls at once and rapid clicks render the tabs once. Switching to a tab shows the current list in the same render, and a hidden tab keeps the matches it last had. Activity, Trends, Maps, and Matches are also filled in while the browser is idle, after load and after each filter change, so opening them is quick. The tab components are wrapped in `memo`, so a header search that does not change the matches does not re-render them.
 7. "<< Back" clears the upload, which unmounts `Dashboard` and its tabs and returns to the menu.
 
-## Styling conventions
+## Deploying
 
-`styles/base.css` holds the color tokens (`--tan`, `--tan-muted`, `--rule`, `--red`, `--blu`, `--positive`, `--negative`, `--gold`) and the primitives the tabs use, so a tab only adds feature-specific CSS in its own file:
+Pushes to `main` build the site and deploy it to GitHub Pages. The workflow in `.github/workflows/ci.yml` installs with `pnpm install --frozen-lockfile` on Node 26, runs `pnpm build`, and uploads `dist/` for the Pages deploy. Pull requests run the build only. `vite.config.ts` sets `base` to `./`, so the same build works under the repository's Pages path.
+
+## Updating the map list
+
+`pnpm maps` rebuilds `data/map-index.json` (map names) and `data/map-modes.json` (map modes). The names come from TF2's local `items_game.txt`, so it needs a Team Fortress 2 installation. The modes come from the TF2 Wiki's List of maps, so it needs internet access. The script searches the usual Steam installation and library locations on Windows, Linux, and macOS. If it cannot find TF2, pass the file path:
+
+```sh
+pnpm --ignore-workspace maps --input "/path/to/Team Fortress 2/tf/scripts/items/items_game.txt"
+```
+
+You can also set `TF2_ITEMS_GAME_PATH` to `items_game.txt` or the folder that holds it. Each output can be written elsewhere, and one dataset can be refreshed on its own:
+
+```sh
+pnpm --ignore-workspace maps --maps-output /path/to/map-index.json --modes-output /path/to/map-modes.json
+pnpm --ignore-workspace maps --maps-only
+pnpm --ignore-workspace maps --modes-only
+```
+
+If either step fails, the script prints one error line, exits with a non-zero code, and leaves both files as they were. The data is imported at build time, so run `pnpm build` or restart `pnpm dev` after refreshing it.
+
+## Updating datacenter names
+
+`pnpm datacenters` rebuilds `data/datacenters.json`. It maps each datacenter code in a match export (such as `sto`) to Valve's location name (such as `Stockholm - Kista (Sweden)`), a short `City, CC` name (such as `Stockholm, SE`), and a country code (such as `SE`). The names come from Valve's public Steam Datagram Relay config for TF2, so it needs internet access but no local TF2 installation:
+
+```sh
+pnpm --ignore-workspace datacenters
+```
+
+If a request or the parse fails, the script prints one error line, exits with a non-zero code, and leaves the data file as it was. A code missing from the file, such as an old or retired relay, is shown in uppercase with no flag on the Matches tab until the file is refreshed.
+
+### Short names
+
+The short name is the city from Valve's description, followed by the country code: `Warsaw, PL`. The city drops the trailing parenthetical, a hosting provider prefix (`Hetzner` or `Datapacket`, listed in `HOSTING_PREFIXES`), and any district after ` - `. `SHORT_NAME_OVERRIDES` holds the few cities the rules get wrong, such as `Tokyo Koto City` to `Tokyo`. A city that is not plain words gets a warning line, so add an override by hand rather than guessing. The match details show the short name next to the flag, and hovering the datacenter shows Valve's full name and the code.
+
+### Flags
+
+The country code comes from the parenthesized country or US state at the end of Valve's description, or from a bare place name such as `Singapore`. The script's `COUNTRY_CODES` table holds those names, and US states map to `US`. A description the table does not know gets an empty country, a warning line, and no flag. Add the name to `COUNTRY_CODES` in `scripts/datacenters.ts` rather than guessing a code.
+
+Each refresh also downloads one flag per country in the file into `public/ui/flags/<code>.svg` (such as `public/ui/flags/se.svg`). The download is pinned by `TWEMOJI_TAG` in the script (currently `v17.0.3`), so a refresh gives the same artwork; change the tag on purpose. The app serves these files directly, with no request to a CDN at runtime. Flags for countries that no longer appear in the config are not deleted. The flag artwork's license is in [credits](credits.md).
+
+## Updating the badges
+
+The README badges are TF2 item-tooltip style SVGs in `docs/badges/`, made by `scripts/make-badges.py`. The script reads the game fonts in `public/ui/fonts` (WOFF2, which needs brotli to decode) and downloads the icons from Simple Icons through cdn.jsdelivr.net. It needs fonttools and brotli:
+
+```sh
+python -m pip install fonttools brotli
+python scripts/make-badges.py
+```
+
+To add a badge, add a row to `BADGES` in the script (file name, icon slug, icon color, label, name, and an optional backing color for logos with cut-outs), then add the matching `<img>` to the README.
+
+## Sounds
+
+Each sound is a file in `public/ui/sfx/`, listed by name in `src/ui/sound.ts` and played with `playSound(name)`, or `playSound(name, gainDb)` for a play that is quieter by `gainDb` dB. The files are processed copies of `sound/ui/*.wav` from `tf2_sound_misc_dir.vpk`: mono, 44.1 kHz, 16-bit. Each one is leveled against the click (the active-RMS level of `buttonclick.wav`), and the shared output gain is 0.5. Mute silences all of them. A control that plays a panel sound on the same press has `data-sound="none"`, so the generic click is skipped.
+
+| Name | File | TF2 source | Plays when | Processing |
+| --- | --- | --- | --- | --- |
+| click | `buttonclick.wav` | `sound/ui/buttonclick.wav` | buttons, tabs, text buttons, filter items, Maps chart bars | none |
+| panel-open | `panel-open.wav` | `sound/ui/panel_open.wav` | help dialog or filter dropdown opens | 4 ms fade-out, 2 dB below the click |
+| panel-close | `panel-close.wav` | `sound/ui/panel_close.wav` | help dialog or filter dropdown closes, by any path | 4 ms fade-out, 2 dB below the click |
+| dashboard-ready | `dashboard-ready.wav` | `sound/ui/mm_join.wav` | a newly loaded CSV shows the dashboard | cut to 2.0 s with a 250 ms fade-out, 6 dB below the click |
+| error | `error.wav` | `sound/ui/vote_no.wav` | a file fails to load or parse, or a tab shows its error panel | trailing silence cut, 30 ms fade-out, 3 dB below the click |
+| strip-open | `strip-open.wav` | `sound/ui/slide_down.wav` | a Matches row's detail strip opens (click, Enter or Space) | 6 dB below the click |
+| strip-close | `strip-close.wav` | `sound/ui/slide_up.wav` | a Matches row's detail strip closes | leading silence cut, 6 dB below the click |
+
+The detail strip slides open in 180 ms and shut in 220 ms, timed to the two slide sounds. Switching rows slides the old strip shut while the new one opens, the table scrolls to keep the clicked row in place, and strip-close plays 8 dB quieter under strip-open. With reduced motion on, the strip snaps open and shut and plays the click instead, since nothing slides.
+
+## Style
+
+The color tokens (`--tan`, `--tan-muted`, `--rule`, `--red`, `--blu`, `--positive`, `--negative`, `--gold`) and the shared primitives live in `src/styles/base.css`, so a tab only adds feature-specific CSS. Feature CSS sits next to its component, such as `src/overview/overview.css`. Inline styles are only for the custom properties above.
 
 - `.tf-button` (`.small-button`, `.icon-button`, `.menu-button`) is pressed when `aria-selected`, `aria-pressed`, or `aria-expanded` is `"true"`.
 - `.tab-button` is a property-sheet tab for the dialog header, not a `.tf-button`. The selected tab has `aria-selected="true"`.
@@ -134,27 +123,18 @@ src/
 - `.field` and `.search` for controls, `.field.check` for checkboxes.
 - `.hud-stat` for big numbers, `.bar-list` for bars (`--value`, `--bar-color`), `.chart-box` for canvases (`--h`).
 - `.outcome-win`, `.outcome-loss`, `.outcome-tie`, `.outcome-none`, `.team-red`, `.team-blu`, `.text-button`.
-
-Feature CSS sits next to its component: `menu/menu.css`, `dashboard/dashboard.css`, `overview/overview.css`, `maps/maps.css`, `matches/matches.css`. Inline styles are only for the custom properties above.
+- The dashboard is as tall as the viewport and only `.dialog-body` scrolls. `.tab-panel.fill` makes a tab fill that body, which Trends, Maps, and Matches use. Other tabs scroll with it.
 
 Hover text goes in `data-tip="..."`, which `ui/tooltip.ts` shows in one shared tooltip. Never use `title`, and never put both on one element.
 
-## Notes
+Other conventions:
 
-- `index.html` only has `#root`. React owns everything under it. A missing `#root` throws at startup through `getElement`.
-- Show and hide with the `hidden` class, or the `hidden` attribute on a tab section. Filter items carry their include or exclude state in `data-state`, and in their accessible name ("Name, included").
+- `index.html` has only the `#root` element for React, and React owns everything under it. A missing `#root` throws at startup through `getElement`.
+- Show and hide with the `hidden` class, or the `hidden` attribute on a tab section. Filter items carry their include or exclude state in `data-state`, and in their accessible name ("Name, 152 matches, included").
 - Team and outcome colors are fixed: RED is `--red`, BLU is `--blu`, WIN is `--positive`, LOSS is `--negative`, a stalemate is `--neutral`, and no result is `--tan-muted`.
 - Chart bar colors come from `barColor` in `charts/theme.ts`, which cycles the TF2 paint colors by bar index.
-- Map names and game modes are imported as JSON. Refreshing the data needs a rebuild or a dev server restart.
-- The dashboard is a separate chunk, so the main bundle is only the menu, React and the app shell. Everything under `dashboard/`, `overview/`, `maps/`, `matches/`, the charts and the map data loads with the dashboard, and the dashboard chunk is prefetched once the menu is idle.
-- Chart.js only has the types the charts use: controllers `BarController` and `LineController`, elements `BarElement`, `LineElement` and `PointElement`, scales `CategoryScale` and `LinearScale`, and the `Legend` and `Tooltip` plugins. Registration lives in `charts/Chart.tsx`. A new chart type needs its controller, elements, scale or plugin added there, or creating the chart throws "is not a registered" from Chart.js.
-- The menu's character art has the same media query as its CSS, so phones never download it. The help dialog's script is a separate chunk that loads when the dialog first opens.
+- Map names, game modes, and datacenter locations are imported as JSON, so refreshing the data needs a rebuild or a dev server restart.
+- The dashboard is a separate chunk, so the main bundle is only the menu, React, and the app shell. The dashboard chunk is prefetched once the menu is idle.
+- Chart.js only has the types the charts use, registered in `charts/Chart.tsx`. A new chart type needs its controller, elements, scale, or plugin added there, or creating the chart throws "is not a registered" from Chart.js.
+- The menu's character art uses the same media query as its CSS, so phones never download it. The help dialog's script is a separate chunk that loads when the dialog first opens.
 - Fonts are WOFF2 files in `public/ui/fonts`, with every glyph kept (no subsetting). `base.css` declares them and `index.html` preloads them. To replace a font, convert it with fontTools and keep the same family names.
-
-## More
-
-- [Components](components.md): the Tab component API and the shared UI components.
-- [Overview tab](overview.md): the Overview charts, their period scope and legends.
-- [Match data](data.md): the match data contract the tabs rely on.
-- [Map data](map-data.md): refreshing `data/map-index.json` and `data/map-modes.json`.
-- [Badges](badges.md): regenerating the README badges.
