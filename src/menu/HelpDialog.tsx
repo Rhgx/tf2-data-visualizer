@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import { TfButton } from "../ui/Button";
+import { playSound } from "../ui/sound";
 
 const MATCH_HISTORY_URL = "https://steamcommunity.com/my/gcpd/440/?tab=playermatchhistory";
 
@@ -31,7 +32,10 @@ export function HelpDialog({ open, onClose, onLoad }: HelpDialogProps): JSX.Elem
   useEffect(() => {
     const element = dialog.current;
     if (!element) return;
-    if (open && !element.open) element.showModal();
+    if (open && !element.open) {
+      element.showModal();
+      playSound("panel-open");
+    }
     if (!open && element.open) element.close();
   }, [open]);
 
@@ -70,7 +74,11 @@ export function HelpDialog({ open, onClose, onLoad }: HelpDialogProps): JSX.Elem
       ref={dialog}
       className="help-modal"
       aria-labelledby="help-modal-title"
-      onClose={onClose}
+      // The native close event covers every way the dialog closes (Escape, backdrop, Close, Load CSV), so the sound plays here
+      onClose={() => {
+        playSound("panel-close");
+        onClose();
+      }}
       // A click on the dialog element itself (not its content) is a click on the backdrop
       onClick={(event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
@@ -84,6 +92,7 @@ export function HelpDialog({ open, onClose, onLoad }: HelpDialogProps): JSX.Elem
             type="button"
             aria-label="Close"
             data-tip="Close"
+            data-sound="none"
             onClick={() => dialog.current?.close()}
           >
             <img src="ui/glyphs/close_x.png" alt="" />
@@ -150,7 +159,7 @@ export function HelpDialog({ open, onClose, onLoad }: HelpDialogProps): JSX.Elem
                 <strong className="step-title">Load it here</strong>
                 <p className="step-detail">Or drop it anywhere.</p>
               </div>
-              <TfButton size="small" onClick={onLoad}>
+              <TfButton size="small" data-sound="none" onClick={onLoad}>
                 Load CSV
               </TfButton>
             </div>

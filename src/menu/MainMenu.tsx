@@ -47,6 +47,7 @@ export function MainMenu({ loading, onFile }: MainMenuProps): JSX.Element {
               icon="ui/glyphs/tutorial.png"
               onPointerEnter={preloadFetcherScript}
               onFocus={preloadFetcherScript}
+              data-sound="none"
               onClick={() => setHelpOpen(true)}
             >
               How do I get my data?

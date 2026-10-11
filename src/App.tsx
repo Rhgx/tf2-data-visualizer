@@ -3,6 +3,7 @@ import { parseCsv } from "./data/csv";
 import type { Match } from "./data/match";
 import { MainMenu } from "./menu/MainMenu";
 import { whenIdle } from "./lib/idle";
+import { playSound } from "./ui/sound";
 
 const PARSE_ERROR = "Could not read this file as a match history CSV. Check that it is unedited, then try again.";
 const PASTE_ERROR = "Could not read the pasted text as a match history CSV. Check that you copied the whole file, then try again.";
@@ -52,9 +53,12 @@ export function App(): JSX.Element {
       startTransition(() => {
         setUpload((previous) => (loadId === latestLoad.current ? { id: (previous?.id ?? 0) + 1, matches } : previous));
       });
+      // Only a new file gets here. Tab switches and returning from the menu leave the upload alone.
+      playSound("dashboard-ready");
     } catch (error) {
       if (loadId !== latestLoad.current) return;
       console.error(error);
+      playSound("error");
       alert(error instanceof ChunkLoadError ? error.message : failureMessage);
     } finally {
       if (loadId === latestLoad.current) setLoading(false);
