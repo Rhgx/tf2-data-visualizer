@@ -2,7 +2,8 @@ import { useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } f
 import { monthLabel } from "../charts/theme";
 import { Panel, PanelNote } from "../ui/Panel";
 import { TfButton } from "../ui/Button";
-import { HeatGrid, heatAmount, type ActivityMode } from "./Heatmap";
+import { HeatGrid, THIN_RESULTS, heatAmount, type ActivityMode } from "./Heatmap";
+import { RecordList } from "./RecordList";
 import { UntimedNote } from "./UntimedNote";
 import {
   calendarColumns,
@@ -12,6 +13,7 @@ import {
   hourTotals,
   monthsOf,
   scopedMatches,
+  weekdayRecords,
   weekdayTotals,
   yearSummary,
   yearSummaryText,
@@ -29,15 +31,15 @@ interface ActivityPanelProps {
 }
 
 export function ActivityPanel({ timed, untimed, firstTime, onShowDay }: ActivityPanelProps) {
-  // Activity is the first timed panel, so the untimed note is shown here and not in Form or Per match
+  // The untimed count sits at the foot of the panel, so it reads as a footnote to the heatmap
   return (
-    <Panel title="Activity" tip="Matches per day and by weekday and hour, in your local time">
-      <UntimedNote count={untimed} />
+    <Panel title="Activity" tip="Matches per day or by weekday and hour, in your local time">
       {timed.length === 0 ? (
         <PanelNote>No matches have a recorded time.</PanelNote>
       ) : (
         <TimedActivity timed={timed} firstTime={firstTime} onShowDay={onShowDay} />
       )}
+      <UntimedNote count={untimed} />
     </Panel>
   );
 }
@@ -48,25 +50,46 @@ interface TimedActivityProps {
   onShowDay: (dateKey: string) => void;
 }
 
-// The period buttons over the hour grids, in the order Left and Right move through them
-const SCOPES: { scope: HourScope; label: string }[] = [
-  { scope: "all", label: "All time" },
-  { scope: "year", label: "Year" },
-  { scope: "month", label: "Month" },
+export interface Choice<T extends string> {
+  value: T;
+  label: string;
+}
+
+type ActivityView = "calendar" | "weekday";
+
+const VIEWS: Choice<ActivityView>[] = [
+  { value: "calendar", label: "Calendar" },
+  { value: "weekday", label: "Weekday × hour" },
 ];
 
-// The calendar and weekday-by-hour heatmaps. Only rendered when there is at least one timed match, so years is not empty.
+const CALENDAR_METRICS: Choice<ActivityMode>[] = [
+  { value: "matches", label: "Matches" },
+  { value: "hours", label: "Hours" },
+  { value: "winrate", label: "Win rate" },
+];
+
+const WEEKDAY_METRICS: Choice<ActivityMode>[] = [
+  { value: "matches", label: "Matches" },
+  { value: "winrate", label: "Win rate" },
+];
+
+const SCOPES: Choice<HourScope>[] = [
+  { value: "all", label: "All time" },
+  { value: "year", label: "Year" },
+  { value: "month", label: "Month" },
+];
+
+// One heatmap at a time: the calendar of days, or the weekday by hour grid. Only rendered when there is at least one timed match, so years is not empty.
 function TimedActivity({ timed, firstTime, onShowDay }: TimedActivityProps) {
-  // The toggle only changes the calendar. The hour grids always show matches and win rate.
-  const [mode, setMode] = useState<ActivityMode>("matches");
+  const [view, setView] = useState<ActivityView>("calendar");
+  const [metric, setMetric] = useState<ActivityMode>("matches");
   // The picked year is tied to the timed list it was picked from, so a new list (any filter change) falls back to the newest year
   const [picked, setPicked] = useState<{ year: number; from: TimedMatch[] } | null>(null);
-  // The hour grids' period. The month is only read while the scope is "month", and a year change clears it.
+  // The weekday grid's period. The month is only read while the scope is "month", and a year change clears it.
   const [scope, setScope] = useState<HourScope>("all");
   const [month, setMonth] = useState<string | null>(null);
-  const yearButtons = useRef<HTMLDivElement>(null);
-  const scopeButtons = useRef<HTMLDivElement>(null);
   const years = useMemo(() => yearsOf(timed), [timed]);
+  // The calendar and the weekday grid's Year scope share this year
   const year = picked?.from === timed ? picked.year : years[0];
   const months = useMemo(() => monthsOf(timed, year), [timed, year]);
   // A stored month that is no longer in this year's list (after a filter change) falls back to the newest month
@@ -76,148 +99,156 @@ function TimedActivity({ timed, firstTime, onShowDay }: TimedActivityProps) {
   const hours = useMemo(() => hourColumns(scoped), [scoped]);
   const hourEdges = useMemo(() => hourTotals(hours), [hours]);
   const dayEdges = useMemo(() => weekdayTotals(hours), [hours]);
-  // One object for both hour grids, so HeatGrid's memo holds while the calendar mode or year changes
   const edges = useMemo(() => ({ hours: hourEdges, days: dayEdges }), [hourEdges, dayEdges]);
+  const records = useMemo(() => weekdayRecords(hours, dayEdges, hourEdges, THIN_RESULTS), [hours, dayEdges, hourEdges]);
 
-  // Cut points come from every year, so the years compare on the same levels. Each mode cuts its own amount (matches or time).
+  // Cut points come from every year, so the years compare on the same levels. Each metric cuts its own amount (matches or time).
   const dayCuts = useMemo(
-    () => heatCuts(Array.from(dayTotals.values(), (total) => heatAmount(total, mode))),
-    [dayTotals, mode]
+    () => heatCuts(Array.from(dayTotals.values(), (total) => heatAmount(total, metric))),
+    [dayTotals, metric]
   );
-  // Hour cells are shaded by match count, so their cut points do not depend on the toggle
+  // Hour cells are shaded by match count, so their cut points do not depend on the metric
   const hourCuts = useMemo(
     () => heatCuts(hours.flatMap((column) => column.cells.map((cell) => (cell ? cell.count : 0)))),
     [hours]
   );
   const columns = useMemo(() => calendarColumns(dayTotals, year, new Date(), firstTime), [dayTotals, year, firstTime]);
   const summary = useMemo(() => yearSummary(dayTotals, year), [dayTotals, year]);
-  const suffix = periodSuffix(scope, year, activeMonth);
+
+  // The calendar always shows one year. The weekday grid only needs one for its Year scope.
+  const showYear = view === "calendar" || scope === "year";
+  const showMonth = view === "weekday" && scope === "month";
+
+  function pickView(next: ActivityView): void {
+    // Hours is only offered by the calendar, so it falls back to matches here
+    if (next === "weekday" && metric === "hours") setMetric("matches");
+    setView(next);
+  }
 
   function pickYear(next: number): void {
     if (next !== year) setMonth(null);
     setPicked({ year: next, from: timed });
   }
 
-  // Left and Right move between the year buttons and select the one they land on, as the dashboard tabs do. The list wraps.
-  function handleYearKey(event: ReactKeyboardEvent<HTMLButtonElement>, index: number): void {
-    const next = arrowStep(event, index, years.length);
-    if (next === null) return;
-    pickYear(years[next]);
-    yearButtons.current?.querySelectorAll("button")[next]?.focus();
-  }
-
-  function handleScopeKey(event: ReactKeyboardEvent<HTMLButtonElement>, index: number): void {
-    const next = arrowStep(event, index, SCOPES.length);
-    if (next === null) return;
-    setScope(SCOPES[next].scope);
-    scopeButtons.current?.querySelectorAll("button")[next]?.focus();
-  }
-
-  // The hour grids sit side by side once this box is wide enough. It follows the panel width, not the window.
   return (
     <div className="activity-body">
-      <section>
-        <div className="heat-heading">
-          <h3 className="sub-title">{mode === "hours" ? "Hours per day" : "Matches per day"}</h3>
-          <div className="activity-modes">
-            <TfButton size="small" aria-pressed={mode === "matches"} onClick={() => setMode("matches")}>
-              Matches
-            </TfButton>
-            <TfButton size="small" aria-pressed={mode === "hours"} onClick={() => setMode("hours")}>
-              Hours
-            </TfButton>
-            <TfButton size="small" aria-pressed={mode === "winrate"} onClick={() => setMode("winrate")}>
-              Win rate
-            </TfButton>
-          </div>
-        </div>
-        <div className="year-buttons" role="group" aria-label="Year" ref={yearButtons}>
-          {years.map((option, index) => (
-            <TfButton
-              key={option}
-              size="small"
-              aria-pressed={option === year}
-              onClick={() => pickYear(option)}
-              onKeyDown={(event) => handleYearKey(event, index)}
-            >
-              {option}
-            </TfButton>
-          ))}
-        </div>
-        <HeatGrid columns={columns} cuts={dayCuts} mode={mode} variant="heat-grid-calendar" onPickDay={onShowDay} />
-        <p className="activity-summary">{yearSummaryText(year, summary)}</p>
-      </section>
-      <section>
-        <div className="heat-heading">
-          <h3 className="sub-title">By weekday and hour</h3>
-          <div className="activity-scope">
-            <div className="activity-modes" role="group" aria-label="Period" ref={scopeButtons}>
-              {SCOPES.map(({ scope: option, label }, index) => (
-                <TfButton
-                  key={option}
-                  size="small"
-                  aria-pressed={option === scope}
-                  onClick={() => setScope(option)}
-                  onKeyDown={(event) => handleScopeKey(event, index)}
-                >
-                  {label}
-                </TfButton>
+      <div className="activity-controls">
+        <ChoiceGroup label="View" choices={VIEWS} value={view} onChange={pickView} />
+        <ChoiceGroup
+          label="Metric"
+          choices={view === "calendar" ? CALENDAR_METRICS : WEEKDAY_METRICS}
+          value={metric}
+          onChange={setMetric}
+        />
+        {view === "weekday" && <ChoiceGroup label="Period" choices={SCOPES} value={scope} onChange={setScope} />}
+        {showYear && <YearPager years={years} year={year} onPick={pickYear} />}
+        {showMonth && (
+          <div className="field">
+            <select aria-label="Month" value={activeMonth ?? ""} onChange={(event) => setMonth(event.target.value)}>
+              {months.map((key) => (
+                <option key={key} value={key}>
+                  {monthLabel(key)}
+                </option>
               ))}
-            </div>
-            {scope === "month" && (
-              <div className="field">
-                <select aria-label="Month" value={activeMonth ?? ""} onChange={(event) => setMonth(event.target.value)}>
-                  {months.map((key) => (
-                    <option key={key} value={key}>
-                      {monthLabel(key)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-        {scoped.length === 0 ? (
-          <PanelNote>No matches in this period</PanelNote>
-        ) : (
-          <div className="hour-grids">
-            <div className="hour-grid">
-              <h4 className="hour-title">{`Matches${suffix}`}</h4>
-              <HeatGrid
-                columns={hours}
-                cuts={hourCuts}
-                mode="matches"
-                variant="heat-grid-hours"
-                edges={edges}
-              />
-            </div>
-            <div className="hour-grid">
-              <h4 className="hour-title">{`Win rate${suffix}`}</h4>
-              <HeatGrid
-                columns={hours}
-                cuts={hourCuts}
-                mode="winrate"
-                variant="heat-grid-hours"
-                edges={edges}
-              />
-            </div>
+            </select>
           </div>
         )}
-      </section>
+      </div>
+      {/* Both views share one grid cell, so the panel is as tall as the taller view. The hidden one keeps its space, so switching does not move the panel. */}
+      <div className="activity-views">
+        <div className={view === "calendar" ? "activity-view" : "activity-view is-hidden"}>
+          <HeatGrid columns={columns} cuts={dayCuts} mode={metric} variant="heat-grid-calendar" onPickDay={onShowDay} />
+          <p className="activity-summary">{yearSummaryText(year, summary)}</p>
+        </div>
+        <div className={view === "weekday" ? "activity-view" : "activity-view is-hidden"}>
+          {scoped.length === 0 ? (
+            <PanelNote>No matches in this period</PanelNote>
+          ) : (
+            <div className="activity-weekday">
+              <HeatGrid columns={hours} cuts={hourCuts} mode={metric} variant="heat-grid-hours" edges={edges} />
+              {records.length > 0 && (
+                <div className="activity-records">
+                  <RecordList rows={records} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-// The index Left or Right moves to in a button group of `count`, wrapping at both ends. null for any other key.
-function arrowStep(event: ReactKeyboardEvent<HTMLButtonElement>, index: number, count: number): number | null {
-  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return null;
-  event.preventDefault();
-  return (index + (event.key === "ArrowRight" ? 1 : count - 1)) % count;
+interface ChoiceGroupProps<T extends string> {
+  label: string;
+  choices: Choice<T>[];
+  value: T;
+  onChange: (value: T) => void;
 }
 
-// Heading text after the grid name, so the grids say which period they show
-function periodSuffix(scope: HourScope, year: number, month: string | null): string {
-  if (scope === "year") return `, ${year}`;
-  if (scope === "month" && month !== null) return `, ${monthLabel(month)}`;
-  return "";
+// A row of toggle buttons with one pressed. Left and Right move through them and select the button they land on, wrapping at both ends.
+export function ChoiceGroup<T extends string>({ label, choices, value, onChange }: ChoiceGroupProps<T>) {
+  const buttons = useRef<HTMLDivElement>(null);
+
+  function handleKey(event: ReactKeyboardEvent<HTMLButtonElement>, index: number): void {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const next = (index + (event.key === "ArrowRight" ? 1 : choices.length - 1)) % choices.length;
+    onChange(choices[next].value);
+    buttons.current?.querySelectorAll("button")[next]?.focus();
+  }
+
+  return (
+    <div className="activity-group">
+      <span className="activity-label">{label}</span>
+      <div className="activity-modes" role="group" aria-label={label} ref={buttons}>
+        {choices.map((choice, index) => (
+          <TfButton
+            key={choice.value}
+            size="small"
+            aria-pressed={choice.value === value}
+            onClick={() => onChange(choice.value)}
+            onKeyDown={(event) => handleKey(event, index)}
+          >
+            {choice.label}
+          </TfButton>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface YearPagerProps {
+  // Newest first, as yearsOf returns them
+  years: number[];
+  year: number;
+  onPick: (year: number) => void;
+}
+
+// Pages through the years with timed matches, like the backpack pages: "<" goes to an older year and ">" to a newer one.
+function YearPager({ years, year, onPick }: YearPagerProps) {
+  const index = years.indexOf(year);
+  const older: number | undefined = years[index + 1];
+  const newer: number | undefined = years[index - 1];
+  return (
+    <div className="year-pager" role="group" aria-label="Year">
+      <TfButton
+        size="small"
+        aria-label="Earlier year"
+        disabled={older === undefined}
+        onClick={older === undefined ? undefined : () => onPick(older)}
+      >
+        {"<"}
+      </TfButton>
+      <span className="year-pager-year">{year}</span>
+      <TfButton
+        size="small"
+        aria-label="Later year"
+        disabled={newer === undefined}
+        onClick={newer === undefined ? undefined : () => onPick(newer)}
+      >
+        {">"}
+      </TfButton>
+    </div>
+  );
 }

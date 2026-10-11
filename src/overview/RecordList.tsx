@@ -3,7 +3,8 @@ import type { RecordRow } from "./stats";
 
 interface RecordListProps {
   rows: RecordRow[];
-  onFocusMatch: (key: string) => void;
+  // Rows with a matchKey get a View link only when this is given
+  onFocusMatch?: (key: string) => void;
 }
 
 // Label and detail on the left, value and View on the right. Rows stay readable at half-panel width.
@@ -21,7 +22,7 @@ export function RecordList({ rows, onFocusMatch }: RecordListProps) {
 
 interface RecordItemProps {
   row: RecordRow;
-  onFocusMatch: (key: string) => void;
+  onFocusMatch?: (key: string) => void;
 }
 
 function RecordItem({ row, onFocusMatch }: RecordItemProps) {
@@ -34,7 +35,7 @@ function RecordItem({ row, onFocusMatch }: RecordItemProps) {
       </span>
       <span className="record-end">
         <span className="record-value">{row.value}</span>
-        {matchKey !== undefined && (
+        {matchKey !== undefined && onFocusMatch && (
           <TextButton onClick={() => onFocusMatch(matchKey)}>
             View
           </TextButton>

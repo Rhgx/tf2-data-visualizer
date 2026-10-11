@@ -1,0 +1,4 @@
+/* Trends tab only. The chart takes the rest of the tab (see .tab-panel.fill in dashboard.css). */
+.trends-panel { flex: 1 1 auto; }
+/* The floor keeps the chart readable: a smaller window scrolls the dialog body instead of squashing it */
+.trends-panel .trends-chart { flex: 1 1 0; min-height: 320px; height: auto; }

@@ -45,10 +45,12 @@
   opacity: 0.6;
 }
 
-/* The scoreboard fills the dialog body; the rows scroll inside it */
+/* The scoreboard fills the tab (see .tab-panel.fill in dashboard.css); the rows scroll inside its table */
+.matches-main { flex: 1 1 auto; }
 .table-wrapper.matches-table {
-  min-height: 360px;
-  max-height: calc(100vh - 300px);
+  flex: 1 1 0;
+  min-height: 320px;
+  max-height: none;
 }
 
 /* The match a link on the Overview tab asked to show. The highlight clears when the matches list changes. */
@@ -56,6 +58,78 @@
   background: rgb(244 209 120 / 12%);
   outline: 1px solid var(--gold);
   outline-offset: -1px;
+}
+
+/* Rows open on click or Enter/Space, so they show a pointer. The focus ring is drawn on the cells, inside the row. */
+.matches-table tbody tr[tabindex] {
+  cursor: pointer;
+}
+
+.matches-table tbody tr[tabindex]:focus-visible {
+  outline: 0;
+}
+
+.matches-table tbody tr[tabindex]:focus-visible td {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+
+/* The detail strip under the open row. It is recessed and has no row stripe or hover, so it does not read as a data row. */
+.matches-table tbody tr.vt-detail {
+  height: auto;
+}
+
+.matches-table tbody tr.vt-detail td {
+  padding: 0;
+  line-height: normal;
+}
+
+.match-detail {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 32px;
+  row-gap: 10px;
+  margin: 0;
+  padding: 10px 14px 12px;
+  background: #1f1d1c;
+  box-shadow: inset 0 3px 0 rgb(0 0 0 / 35%);
+  border-bottom: 1px solid var(--rule);
+}
+
+.match-detail-field {
+  min-width: 0;
+}
+
+/* Flag and short name in one row. Centering both on the line box, rather than vertical-align, keeps the flag level with the
+   capitals of the text. TF2 Secondary's capitals sit about 0.9px above the line box center at 13px (measured), so the flag
+   is raised by the same amount. */
+.match-datacenter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.match-datacenter .flag {
+  position: relative;
+  top: -0.07em;
+}
+
+/* Label small above the value, as the TF2 scoreboard labels its fields */
+.match-detail dt {
+  color: var(--tan-muted);
+  font: 11px/1.2 "TF2 Build", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.match-detail dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--tan);
+  font-size: 13px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Team score in the TF2 scoreboard style: team color blocks with the score in TF2 Build */

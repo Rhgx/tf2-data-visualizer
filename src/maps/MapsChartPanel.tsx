@@ -1,26 +1,18 @@
-import { useCallback, useMemo, useRef, type JSX } from "react";
+import { useCallback, useMemo, useRef, type JSX, type ReactNode } from "react";
 import type { Chart, ChartConfiguration, ChartOptions, ChartType, Plugin } from "chart.js";
 import { barColor } from "../charts/theme";
 import { ChartCanvas } from "../charts/Chart";
 import { formatWinRate } from "../data/match";
 import { gameModeName } from "../data/maps";
 import { formatHours, formatNumber } from "../lib/format";
+import { playSound } from "../ui/sound";
 import { Panel, PanelNote } from "../ui/Panel";
-import { SearchField, SelectField } from "../ui/Field";
-import { TextButton, TfButton } from "../ui/Button";
+import { TfButton } from "../ui/Button";
 import { mapWinRate, percent, plural, type ChartMetric, type MapStats } from "./stats";
 
 // One bar is 24px tall so horizontal map names stay readable without rotation
 const PX_PER_BAR = 24;
 const MIN_CHART_HEIGHT = 200;
-
-const TOP_OPTIONS = [
-  { value: "10", label: "10" },
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
-  { value: "50", label: "50" },
-  { value: "all", label: "All" },
-];
 
 // The value label plugin reads its metric from the chart options, so one plugin object serves every render.
 declare module "chart.js" {
@@ -64,14 +56,29 @@ function tooltipLines(s: MapStats, totalMatches: number, hasHours: boolean): str
   return lines;
 }
 
-function chartConfig(charted: MapStats[], metric: ChartMetric, totalMatches: number, hasHours: boolean): ChartConfiguration<"bar"> {
+function chartConfig(
+  charted: MapStats[],
+  metric: ChartMetric,
+  totalMatches: number,
+  hasHours: boolean,
+  selectedId: string | null,
+  onSelect: (id: string) => void
+): ChartConfiguration<"bar"> {
   const isHours = metric === "hours";
   const options: ChartOptions<"bar"> = {
     indexAxis: "y",
-    // This chart is built while its tab is hidden at 0 width, so an animated first draw would show the squashed layout
-    animation: false,
     // Room for the value labels drawn past the longest bar
     layout: { padding: { right: 48 } },
+    onClick: (_event, elements) => {
+      const [hit] = elements;
+      if (hit) {
+        playSound("click");
+        onSelect(charted[hit.index].id);
+      }
+    },
+    onHover: (_event, elements, chart) => {
+      chart.canvas.style.cursor = elements.length > 0 ? "pointer" : "default";
+    },
     scales: {
       x: {
         beginAtZero: true,
@@ -105,7 +112,9 @@ function chartConfig(charted: MapStats[], metric: ChartMetric, totalMatches: num
           label: isHours ? "Hours played" : "Matches played",
           data: charted.map((s) => (isHours ? s.seconds / 3600 : s.matches)),
           backgroundColor: charted.map((_, i) => barColor(i)),
-          borderWidth: 0,
+          // The picked bar gets a thin tan outline, the others have none
+          borderColor: "#ebe2ca",
+          borderWidth: charted.map((s) => (s.id === selectedId ? 2 : 0)),
           barPercentage: 0.8,
           categoryPercentage: 0.8,
         },
@@ -121,36 +130,33 @@ interface MapsChartPanelProps {
   charted: MapStats[];
   // How many maps match the search, before Top N cuts them
   filteredCount: number;
-  // The search as it is shown in the field, and the trimmed query the chart is filtered by
-  search: string;
+  // The trimmed search the chart is filtered by
   query: string;
   totalMatches: number;
   hasHours: boolean;
-  topN: string;
   metric: ChartMetric;
-  sort: string;
-  onTopN: (value: string) => void;
-  onMetric: (value: ChartMetric) => void;
-  onSort: (value: string) => void;
-  onSearch: (value: string) => void;
-  onReset: () => void;
+  // The map the card shows, highlighted in the chart
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  // The Top and Metric selects, which only the chart uses
+  countControls: ReactNode;
+  // The Chart / Table switch and the sort, search and reset controls, shared with the table view
+  viewSwitch: ReactNode;
+  filters: ReactNode;
 }
 
 export function MapsChartPanel({
   charted,
   filteredCount,
-  search,
   query,
   totalMatches,
   hasHours,
-  topN,
   metric,
-  sort,
-  onTopN,
-  onMetric,
-  onSort,
-  onSearch,
-  onReset,
+  selectedId,
+  onSelect,
+  countControls,
+  viewSwitch,
+  filters,
 }: MapsChartPanelProps): JSX.Element {
   const chartRef = useRef<Chart<"bar"> | null>(null);
   // Stable, so ChartCanvas does not re-run its effect on every render
@@ -159,23 +165,9 @@ export function MapsChartPanel({
   }, []);
 
   const config = useMemo(
-    () => chartConfig(charted, metric, totalMatches, hasHours),
-    [charted, metric, totalMatches, hasHours]
+    () => chartConfig(charted, metric, totalMatches, hasHours, selectedId, onSelect),
+    [charted, metric, totalMatches, hasHours, selectedId, onSelect]
   );
-
-  // Hours options are disabled when no match has played time, so the metric and sort fall back to matches
-  const metricOptions = [
-    { value: "count", label: "Matches" },
-    { value: "hours", label: "Hours", disabled: !hasHours },
-  ];
-  const sortOptions = [
-    { value: "countDesc", label: "Matches (most)" },
-    { value: "countAsc", label: "Matches (fewest)" },
-    { value: "hoursDesc", label: "Hours (most)", disabled: !hasHours },
-    { value: "hoursAsc", label: "Hours (least)", disabled: !hasHours },
-    { value: "alphaAsc", label: "Name (A-Z)" },
-    { value: "alphaDesc", label: "Name (Z-A)" },
-  ];
 
   function downloadChart() {
     const chart = chartRef.current;
@@ -189,41 +181,23 @@ export function MapsChartPanel({
     link.remove();
   }
 
+  // The view switch sits after the title, and the right-aligned group drops to the next line. Download PNG is last
+  // because only the chart has it.
   const controls = (
-    <div className="maps-controls">
-      <SelectField
-        label="Top"
-        tip="Maps shown in the chart. The table below always lists every map."
-        value={topN}
-        options={TOP_OPTIONS}
-        onChange={onTopN}
-      />
-      <SelectField
-        label="Metric"
-        tip="Rank and label bars by matches or hours played. Hours need played time in the file"
-        value={metric}
-        options={metricOptions}
-        onChange={(value) => onMetric(value === "hours" ? "hours" : "count")}
-      />
-      <SelectField
-        label="Sort"
-        tip="Table order. The chart uses the same direction for the chosen metric."
-        value={sort}
-        options={sortOptions}
-        onChange={onSort}
-      />
-      <SearchField label="Search" placeholder="Search maps" value={search} onChange={onSearch} />
-      <TfButton size="small" icon="ui/glyphs/camera.png" onClick={downloadChart}>
-        Download PNG
-      </TfButton>
-      <TextButton tip="Back to Top 20, most matches first, and no search" onClick={onReset}>
-        Reset
-      </TextButton>
-    </div>
+    <>
+      {viewSwitch}
+      <div className="maps-filters">
+        {countControls}
+        {filters}
+        <TfButton size="small" icon="ui/glyphs/camera.png" onClick={downloadChart}>
+          Download PNG
+        </TfButton>
+      </div>
+    </>
   );
 
   return (
-    <Panel title="Most played maps" actions={controls}>
+    <Panel title="Maps" className="maps-main" actions={controls}>
       <div className="chart-scroll">
         <ChartCanvas
           config={config}

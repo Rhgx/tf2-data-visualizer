@@ -483,6 +483,44 @@ export function weekdayTotals(columns: HeatColumn[]): HeatCell[] {
   return WEEKDAYS.map((label, day) => ({ label, ...sumCells(columns.map((column) => column.cells[day])) }));
 }
 
+// The total with the highest score, the first one on a tie. A null score is not a candidate.
+function topOf(totals: HeatCell[], score: (total: HeatCell) => number | null): HeatCell | undefined {
+  let best: HeatCell | undefined;
+  let bestScore = 0;
+  for (const total of totals) {
+    const value = score(total);
+    if (value !== null && (best === undefined || value > bestScore)) {
+      best = total;
+      bestScore = value;
+    }
+  }
+  return best;
+}
+
+// The weekday view's side list for one period: the busiest weekday, hour and slot by matches, and the best weekday and hour by win rate.
+// A rate needs at least minResults results, so one or two matches cannot top it. An item with no qualifying data is left out.
+export function weekdayRecords(columns: HeatColumn[], days: HeatCell[], hours: HeatCell[], minResults: number): RecordRow[] {
+  const slots = columns.flatMap((column) => column.cells).filter((cell): cell is HeatCell => cell !== null);
+  const byCount = (total: HeatCell): number | null => (total.count > 0 ? total.count : null);
+  const byRate = (total: HeatCell): number | null => (total.results >= minResults ? total.wins / total.results : null);
+  const busiestDay = topOf(days, byCount);
+  const busiestHour = topOf(hours, byCount);
+  const peak = topOf(slots, byCount);
+  const bestDay = topOf(days, byRate);
+  const bestHour = topOf(hours, byRate);
+  return present([
+    busiestDay ? { label: "Busiest day", value: formatNumber(busiestDay.count), detail: busiestDay.label } : null,
+    busiestHour ? { label: "Busiest hour", value: formatNumber(busiestHour.count), detail: busiestHour.label } : null,
+    peak ? { label: "Peak slot", value: formatNumber(peak.count), detail: peak.label } : null,
+    bestDay ? { label: "Best win rate day", value: percentOf(bestDay), detail: bestDay.label } : null,
+    bestHour ? { label: "Best win rate hour", value: percentOf(bestHour), detail: bestHour.label } : null,
+  ]);
+}
+
+function percentOf(total: HeatCell): string {
+  return `${Math.round((total.wins / total.results) * 100)}%`;
+}
+
 // Round durations in seconds that bin edges are picked from
 const QUEUE_LADDER = [5, 10, 15, 30, 45, 60, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600, 7200];
 const MAX_QUEUE_EDGES = 5;
@@ -518,6 +556,15 @@ function queueEdges(seconds: number[]): number[] {
 
 function percentile(sorted: number[], fraction: number): number {
   return sorted[Math.floor(fraction * (sorted.length - 1))];
+}
+
+// Unlike percentile, which picks a whole value for the bin edges, this interpolates between the two ranks around q (0 to 1).
+// The list must be sorted and not empty.
+export function quantile(sorted: readonly number[], q: number): number {
+  const rank = (sorted.length - 1) * q;
+  const low = Math.floor(rank);
+  const high = Math.ceil(rank);
+  return sorted[low] + (sorted[high] - sorted[low]) * (rank - low);
 }
 
 // Keeps MAX_QUEUE_EDGES edges spread evenly across the list, always including the first and the last

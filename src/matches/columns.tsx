@@ -1,6 +1,5 @@
 import { cleanNumeric } from "../data/csv";
 import { kdRatio, type Match, type Outcome, type Team } from "../data/match";
-import { gameModeName } from "../data/maps";
 import { formatMatchTime, formatNumber, formatShortDuration } from "../lib/format";
 import type { Column } from "../ui/VirtualTable";
 
@@ -20,20 +19,15 @@ function formatPlayedAt(time: number | null): string {
 
 const OUTCOME_TEXT: Record<Outcome, string> = { wins: "WIN", losses: "LOSS", ties: "STALEMATE", none: "NO RESULT" };
 const OUTCOME_CLASS: Record<Outcome, string> = { wins: "outcome-win", losses: "outcome-loss", ties: "outcome-tie", none: "outcome-none" };
-const TEAM_TEXT: Record<Team, string> = { red: "RED", blu: "BLU" };
+export const TEAM_TEXT: Record<Team, string> = { red: "RED", blu: "BLU" };
 
 // Rows without result data have no stats, so their stat cells show "-" instead of 0
-function hasStats(match: Match): boolean {
+export function hasStats(match: Match): boolean {
   return match.outcome !== "none";
 }
 
 // Team score color blocks in the TF2 scoreboard style. Their padding is the column's pad, not part of the text.
-function scoreText(match: Match): string {
-  if (match.redScore === null || match.bluScore === null) return "";
-  return `RED ${match.redScore}:${match.bluScore} BLU`;
-}
-
-function ScoreBlocks({ match }: { match: Match }) {
+export function ScoreBlocks({ match }: { match: Match }) {
   if (match.redScore === null || match.bluScore === null) return "-";
   return (
     <>
@@ -56,24 +50,18 @@ function ClassIcons({ classes }: { classes: string[] }) {
   );
 }
 
+// Kept to what fits a 1440px window. The other fields (mode, team, score, healing, queue and so on) are in the
+// detail strip that opens under a row, see MatchDetail.tsx.
 export const DEFAULT_COLUMNS: Column<MatchRow>[] = [
   { key: "rank", label: "#", tip: "Rank in the current order", text: ({ rank }) => String(rank) },
   { key: "played_at", label: "Played At", text: ({ match }) => formatPlayedAt(match.time) },
   { key: "map", label: "Map", text: ({ match }) => match.mapName },
-  { key: "mode", label: "Mode", text: ({ match }) => (match.mode ? gameModeName(match.mode) : "Unknown") },
-  { key: "type", label: "Type", text: ({ match }) => match.type },
   {
     key: "result",
     label: "Result",
     tip: "NO RESULT: no result data, such as MvM and abandoned matches",
     text: ({ match }) => OUTCOME_TEXT[match.outcome],
     render: ({ match }) => <span className={OUTCOME_CLASS[match.outcome]}>{OUTCOME_TEXT[match.outcome]}</span>,
-  },
-  {
-    key: "team",
-    label: "Team",
-    text: ({ match }) => (match.team ? TEAM_TEXT[match.team] : ""),
-    render: ({ match }) => (match.team ? <span className={`team-${match.team}`}>{TEAM_TEXT[match.team]}</span> : "-"),
   },
   {
     // Icons are 18px with 2px gaps, so the width is fixed rather than measured from the names
@@ -83,35 +71,10 @@ export const DEFAULT_COLUMNS: Column<MatchRow>[] = [
     text: ({ match }) => match.classes.join(", "),
     render: ({ match }) => <ClassIcons classes={match.classes} />,
   },
-  {
-    key: "score",
-    label: "Score",
-    pad: 40,
-    text: ({ match }) => scoreText(match),
-    render: ({ match }) => <ScoreBlocks match={match} />,
-  },
   { key: "kills", label: "Kills", text: ({ match }) => (hasStats(match) ? formatNumber(match.kills) : "") },
   { key: "deaths", label: "Deaths", text: ({ match }) => (hasStats(match) ? formatNumber(match.deaths) : "") },
   { key: "kd", label: "K/D", tip: "Kills divided by deaths", text: ({ match }) => (hasStats(match) ? kdRatio(match.kills, match.deaths) : "") },
   { key: "damage", label: "Damage", text: ({ match }) => (hasStats(match) ? formatNumber(match.damage) : "") },
-  { key: "healing", label: "Healing", text: ({ match }) => (hasStats(match) ? formatNumber(match.healing) : "") },
-  {
-    key: "support",
-    label: "Support",
-    tip: "Support score, as counted by the game",
-    text: ({ match }) => (hasStats(match) ? formatNumber(match.support) : ""),
-  },
-  {
-    key: "played_seconds",
-    label: "Time played",
-    tip: "Time in the match, from when you joined",
-    text: ({ match }) => (hasStats(match) ? formatShortDuration(match.playedSeconds) : ""),
-  },
-  {
-    key: "queue_seconds",
-    label: "Queue",
-    text: ({ match }) => (hasStats(match) ? formatShortDuration(match.queueSeconds) : ""),
-  },
 ];
 
 // Columns the raw view puts first, in this order

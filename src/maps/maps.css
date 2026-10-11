@@ -1,15 +1,67 @@
-/* Maps tab: stacked full-width panels. The table needs the width for its eight columns. */
-.maps-content { display: flex; flex-direction: column; gap: 16px; }
+/* Maps tab: the HUD, then the chart or table with the selected map's card. The tab fills the dialog body (its tab-panel
+   has the fill class), so the chart or table takes whatever height the HUD leaves. */
+.maps-content { display: flex; flex-direction: column; gap: 16px; flex: 1 1 auto; }
 
 /* Four HUD stats in one row */
 .maps-hud { --cols: 4; }
 
-/* Controls sit at the right of the panel title (the title's h2 takes the spare width) and wrap under it on narrow screens. */
-.maps-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.maps-controls .search input { width: 200px; }
+/* The header reads: title and the Chart / Table switch on the first line, then the controls right-aligned on the next.
+   The title's h2 gives up its auto right margin here, so the switch sits right after the title. */
+.maps-main .panel-title h2 { margin-right: 0; }
+.maps-filters { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; margin-left: auto; }
+.maps-filters .search input { width: 200px; }
+.maps-views { display: flex; gap: 6px; }
+.maps-reserved { visibility: hidden; }
+/* A wrapper with no box, so its selects are direct flex items and wrap exactly as the chart's do. Hidden, not removed. */
+.maps-reserved-group { display: contents; visibility: hidden; }
 
 /* A tall chart (All maps) scrolls inside this box, so the table below stays on screen. Scrollbar matches base.css. */
 .chart-scroll { max-height: 640px; overflow-y: auto; }
 .chart-scroll::-webkit-scrollbar { width: 6px; }
 .chart-scroll::-webkit-scrollbar-button { display: none; }
 .chart-scroll::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+/* The chart or table, then the selected map's card. Below 900px the card stacks under them. */
+.maps-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; flex: 1 1 0; min-height: 0; }
+.maps-main .table-wrapper tbody tr.map-row-selected { background: rgb(244 209 120 / 14%); box-shadow: inset 2px 0 0 var(--gold); }
+
+.map-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding-top: 10px; }
+.map-card .record-row { padding: 4px 10px; }
+.map-card-head { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.map-card-name {
+  margin: 0;
+  color: var(--tan);
+  /* 19px fits the widest map name (arena_lumberyard_event, 344px at 24px, so 273px here) in the 288px content width of
+     the 320px card. Longer names wrap at their underscores, see MapCard. */
+  font: 19px/1.15 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #2a2623;
+  text-wrap: balance;
+}
+.map-card-mode { margin: 0; color: var(--tan-muted); font-size: 13px; }
+.map-card-class { display: inline-flex; align-items: center; color: var(--tan); font: 14px "TF2 Secondary", Verdana, sans-serif; text-shadow: none; }
+
+/* Last 10: one square per match, newest on the right. Wins and losses use the Matches tab colors. */
+.map-recent { display: inline-flex; align-items: center; gap: 3px; }
+.map-recent-square { width: 10px; height: 10px; background: var(--neutral); }
+.map-recent-wins { background: var(--positive); }
+.map-recent-losses { background: var(--negative); }
+
+/* The monthly chart is a flex column. Its canvas box takes the rest of the card, with a 200px box when stacked. */
+.map-card-chart { display: flex; flex-direction: column; gap: 4px; height: 200px; }
+.map-card-caption { margin: 0; color: var(--tan-muted); font: 11px/1.2 "TF2 Build", sans-serif; text-transform: uppercase; }
+.map-card-chart .chart-box { flex: 1 1 0; min-height: 0; height: auto; }
+.map-card .well { flex: none; }
+.map-card-link { align-self: flex-start; margin-top: auto; }
+
+/* Desktop: the chart or table and the card share the tab's height. Both keep a 320px minimum for the chart or table,
+   and the card scrolls if its list and chart do not fit. The row is minmax(0, 1fr) so a tall table scrolls inside its
+   panel instead of stretching the row. */
+@media (min-width: 900px) {
+  .maps-body { grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: minmax(0, 1fr); }
+  .maps-main .chart-scroll { flex: 1 1 auto; min-height: 320px; max-height: none; }
+  .maps-main .chart-box { height: 100%; min-height: var(--h); }
+  .maps-main .table-wrapper { flex: 1 1 auto; min-height: 320px; max-height: none; }
+  .map-card { min-height: 0; overflow-y: auto; }
+  .map-card-chart { flex: 1 1 0; min-height: 110px; height: auto; }
+}

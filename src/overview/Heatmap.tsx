@@ -8,7 +8,7 @@ type HeatStyle = CSSProperties & { [name: `--${string}`]: string | number };
 export type ActivityMode = "matches" | "hours" | "winrate";
 
 // Cells with fewer results than this are drawn faint, so one or two matches do not read as a strong rate
-const THIN_RESULTS = 3;
+export const THIN_RESULTS = 3;
 // Column 1 holds the weekday names and row 1 the axis labels, so the first weekday row is 2 and the edge row comes after the seventh
 const FIRST_ROW = 2;
 const EDGE_ROW = WEEKDAYS.length + FIRST_ROW;
@@ -41,7 +41,7 @@ interface HeatGridProps {
 
 // Every item is placed explicitly, so the edge bars can share the grid's tracks. overview.css sizes the tracks from --columns.
 // The legend is the last row of the grid, so it starts at the first cell column and shares the cell sizes.
-// Memoized, so a change to the other grid or to the calendar's mode leaves this one alone when its own props are the same.
+// Memoized, so a re-render of the panel leaves the grid alone when its own props are the same.
 export const HeatGrid = memo(function HeatGrid({ columns, cuts, mode, variant, edges, onPickDay }: HeatGridProps) {
   const gridStyle: HeatStyle = { "--columns": columns.length };
   const edgeColumn = columns.length + 2;
@@ -101,6 +101,7 @@ export const HeatGrid = memo(function HeatGrid({ columns, cuts, mode, variant, e
               className="heat-edge-day"
               column={edgeColumn}
               row={index + FIRST_ROW}
+              value={edgeValue(day, mode)}
             />
           ))}
           <HeatLegend
@@ -154,10 +155,12 @@ interface EdgeBarProps {
   className: string;
   column: number;
   row: number;
+  // Printed at the end of the bar. Only the weekday bars have one.
+  value?: string;
 }
 
 // A bar under the hours or to the right of the weekdays. Matches mode uses the default bar color; win rate mode colors it by rate.
-function EdgeBar({ total, share, mode, className, column, row }: EdgeBarProps) {
+function EdgeBar({ total, share, mode, className, column, row, value }: EdgeBarProps) {
   const style: HeatStyle = {
     gridColumnStart: column,
     gridRowStart: row,
@@ -165,7 +168,11 @@ function EdgeBar({ total, share, mode, className, column, row }: EdgeBarProps) {
     ...(mode === "winrate" ? tintStyle(total) : {}),
   };
   const tip = edgeTip(total, mode);
-  return <span className={`heat-edge ${className}`} style={style} data-tip={tip} role="img" aria-label={tip} />;
+  return (
+    <span className={`heat-edge ${className}`} style={style} data-tip={tip} role="img" aria-label={tip}>
+      {value !== undefined && <span className="heat-edge-value">{value}</span>}
+    </span>
+  );
 }
 
 interface HeatLegendProps {
@@ -235,8 +242,18 @@ function matchCount(count: number): string {
   return `${formatNumber(count)} ${count === 1 ? "match" : "matches"}`;
 }
 
+function winPercent(total: HeatTotal): number {
+  return Math.round((total.wins / total.results) * 100);
+}
+
 function winText(total: HeatTotal): string {
-  return `${Math.round((total.wins / total.results) * 100)}% win`;
+  return `${winPercent(total)}% win`;
+}
+
+// The number at the end of a weekday bar: its matches, or its win rate in win rate mode (blank when no result)
+function edgeValue(total: HeatCell, mode: ActivityMode): string {
+  if (mode === "winrate") return total.results === 0 ? "" : `${winPercent(total)}%`;
+  return formatNumber(total.count);
 }
 
 // Cell tips name the day first. Hours mode adds the time played, and win rate mode adds the rate, or says why there is none.

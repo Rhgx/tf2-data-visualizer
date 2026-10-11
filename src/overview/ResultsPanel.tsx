@@ -1,33 +1,23 @@
-import { useMemo, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { Panel } from "../ui/Panel";
 import { formatWinRate, type Match, type Team } from "../data/match";
 import { formatNumber } from "../lib/format";
-import { RecordList } from "./RecordList";
-import {
-  averageText,
-  countOutcomes,
-  OUTCOME_SPLIT,
-  percent,
-  TEAMS,
-  winRateOf,
-  hasStats,
-  type OverviewGroups,
-  type RecordRow,
-} from "./stats";
+import { countOutcomes, OUTCOME_SPLIT, percent, TEAMS, winRateOf, type OverviewGroups } from "./stats";
 
 // CSSProperties has no custom properties, so --value is added to the type instead of casting the style object.
 type SplitStyle = CSSProperties & { "--value": number };
 
 // Every split segment and key shares this note, since the header win rate leaves no-result matches out
 const SPLIT_TIP = "Share of all matches, including no-result ones. Win rate leaves those out";
+// Same reasoning for the team halves: the rate leaves no-result matches out, the match count does not
+const TEAM_TIP = "Wins divided by wins, losses and stalemates. No-result matches are left out of the rate, but not the match count";
 
 interface ResultsPanelProps {
   matches: Match[];
   groups: OverviewGroups;
-  onFocusMatch: (key: string) => void;
 }
 
-export function ResultsPanel({ matches, groups, onFocusMatch }: ResultsPanelProps) {
+export function ResultsPanel({ matches, groups }: ResultsPanelProps) {
   const counts = groups.outcomes;
   const total = matches.length;
   return (
@@ -47,45 +37,31 @@ export function ResultsPanel({ matches, groups, onFocusMatch }: ResultsPanelProp
           </div>
         ))}
       </div>
-      <TeamColumns teams={groups.teams} onFocusMatch={onFocusMatch} />
+      <TeamScores teams={groups.teams} />
     </Panel>
   );
 }
 
-interface TeamColumnsProps {
+interface TeamScoresProps {
   teams: Map<Team, Match[]>;
-  onFocusMatch: (key: string) => void;
 }
 
-// Scoreboard-style RED and BLU columns. Hidden when no match has a recorded team.
-function TeamColumns({ teams, onFocusMatch }: TeamColumnsProps) {
-  const columns = useMemo(
-    () =>
-      TEAMS.map(({ team, name }) => {
-        const list = teams.get(team) ?? [];
-        const scored = list.filter(hasStats);
-        const counts = countOutcomes(list);
-        const rows: RecordRow[] = [
-          { label: "Matches", value: formatNumber(list.length) },
-          { label: "Wins", value: formatNumber(counts.wins) },
-          { label: "Win rate", value: formatWinRate(winRateOf(counts)) },
-          { label: "Avg kills", value: averageText(scored, "kills", 2) },
-          { label: "Avg damage", value: averageText(scored, "damage", 1) },
-        ];
-        return { team, name, rows };
-      }),
-    [teams]
-  );
-
+// Scoreboard-style RED and BLU halves, each led by the team's win rate. Hidden when no match has a recorded team.
+function TeamScores({ teams }: TeamScoresProps) {
   if (teams.size === 0) return null;
   return (
-    <div className="team-columns">
-      {columns.map(({ team, name, rows }) => (
-        <div key={team} className="team-column">
-          <header className={`team-${team}`}>{name}</header>
-          <RecordList rows={rows} onFocusMatch={onFocusMatch} />
-        </div>
-      ))}
+    <div className="team-scores">
+      {TEAMS.map(({ team, name }) => {
+        const list = teams.get(team) ?? [];
+        const counts = countOutcomes(list);
+        return (
+          <div key={team} className={`team-score team-score-${team}`} data-tip={TEAM_TIP}>
+            <header className={`team-${team}`}>{name}</header>
+            <span className="team-score-rate">{formatWinRate(winRateOf(counts))}</span>
+            <span className="team-score-note">{`${formatNumber(counts.wins)} wins of ${formatNumber(list.length)} matches`}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

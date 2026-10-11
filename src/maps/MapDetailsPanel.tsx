@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import { kdRatio, formatWinRate } from "../data/match";
 import { gameModeName } from "../data/maps";
 import { formatHours, formatNumber } from "../lib/format";
 import { Panel, PanelNote } from "../ui/Panel";
+import { TfButton } from "../ui/Button";
 import { VirtualTable, type Column } from "../ui/VirtualTable";
 import { mapWinRate, percent, plural, type MapStats } from "./stats";
 
@@ -81,12 +83,54 @@ interface MapDetailsPanelProps {
   // Already sorted by the table's own sort, not the chart's rank
   rows: MapRow[];
   hasHours: boolean;
+  // The row the card shows, highlighted in the table
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  // The chart's Top and Metric selects. Rendered hidden here, so Sort, Search and Reset keep their places in both views.
+  countControls: ReactNode;
+  // The Chart / Table switch and the sort, search and reset controls, shared with the chart view
+  viewSwitch: ReactNode;
+  filters: ReactNode;
 }
 
-export function MapDetailsPanel({ rows, hasHours }: MapDetailsPanelProps) {
+export function MapDetailsPanel({
+  rows,
+  hasHours,
+  selectedId,
+  onSelect,
+  countControls,
+  viewSwitch,
+  filters,
+}: MapDetailsPanelProps) {
   return (
-    <Panel title="Map details" actions={<PanelNote>{plural(rows.length, "map", "maps")}</PanelNote>}>
-      <VirtualTable rows={rows} columns={hasHours ? COLUMNS_WITH_TIME : COLUMNS} rowKey={rowKey} />
+    <Panel
+      title="Maps"
+      className="maps-main"
+      actions={
+        <>
+          {viewSwitch}
+          <div className="maps-filters">
+            <div className="maps-reserved-group" aria-hidden="true">
+              {countControls}
+            </div>
+            {filters}
+            {/* Download PNG is chart only. This hidden copy keeps its width, so Sort, Search and Reset stay where they are in the chart view. */}
+            <TfButton size="small" icon="ui/glyphs/camera.png" aria-hidden="true" className="maps-reserved">
+              Download PNG
+            </TfButton>
+          </div>
+        </>
+      }
+    >
+      <VirtualTable
+        rows={rows}
+        columns={hasHours ? COLUMNS_WITH_TIME : COLUMNS}
+        rowKey={rowKey}
+        rowClassName={(row) => (row.id === selectedId ? "map-row-selected" : "")}
+        onToggle={(row) => onSelect(row.id)}
+        selectedKey={selectedId}
+      />
+      <PanelNote>{plural(rows.length, "map", "maps")}</PanelNote>
     </Panel>
   );
 }

@@ -1,5 +1,6 @@
-/* Full-screen dialog after loading: header (title, filters, tabs), body that takes the rest, footer strip at the bottom. */
-#dashboard { display: flex; flex-direction: column; min-height: 100vh; }
+/* Full-screen dialog after loading: header (title, filters, tabs), body that takes the rest, footer strip at the bottom.
+   The dialog is exactly the viewport tall, so the body scrolls and the footer stays on screen. */
+#dashboard { display: flex; flex-direction: column; height: 100dvh; }
 #dashboard > .dialog-header, #dashboard > .dialog-footer { flex: none; }
 
 /* The header's 4px rule runs along its bottom edge. Tabs sit on it, and the selected tab drops 4px over it so it
@@ -55,7 +56,13 @@
   overflow-y: auto;
   background: rgb(28 26 25 / 88%);
 }
-.tab-panel { display: flex; flex-direction: column; gap: 16px; }
+/* Every tab section is as tall as the body, so a .tab-panel.fill inside it has a height to fill. A taller tab overflows
+   its section, and the body scrolls to show it. The padding under a scrolling tab is part of the body's scroll area,
+   so the tab ends 16px above the footer, as the body padding did when the page scrolled. */
+.dialog-body > section { height: 100%; }
+.tab-panel { display: flex; flex-direction: column; gap: 16px; padding-bottom: 16px; }
+/* Trends and Maps fill the body: the tab is at least as tall as the body, and its charts flex into the rest. */
+.tab-panel.fill { min-height: 100%; padding-bottom: 0; }
 
 /* Filter strip in the header: the clear link and the shown count sit before the three dropdown triggers, so the
    strip grows to the left and the triggers (and their open panels) stay where they are when filters change. */
@@ -96,8 +103,11 @@
   border-image: url("/ui/button_holder_central.png") 32 fill / 12px;
   font-size: 13px;
 }
-.filter-list { display: flex; flex-direction: column; gap: 2px; max-height: 50vh; padding: 2px; }
+/* The panel's max-height (set from the window in FilterMenu) bounds the list, which takes the rest and scrolls. */
+.filter-list { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; padding: 2px; }
+.filter-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; }
 .filter-empty { padding: 4px; }
+.filter-divider { height: 0; margin: 4px 6px; border: 0; border-top: 1px solid var(--rule); }
 .filter-item {
   display: flex;
   align-items: center;
@@ -113,8 +123,12 @@
 .filter-item:hover { color: var(--tan); background: rgb(235 226 202 / 6%); }
 .filter-item[data-state="include"] { color: var(--tan); background: rgb(153 204 255 / 10%); }
 .filter-item[data-state="exclude"] { color: var(--tan); background: rgb(255 64 64 / 10%); }
-.filter-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.filter-prefix { margin-left: auto; color: #8f8372; font-size: 12px; }
+/* Items that would add no matches stay in the list, dimmed */
+.filter-item.empty { opacity: 0.5; }
+/* The name takes the free width, so the count sits at the right edge. The panel is sized so no name is cut off. */
+.filter-name { flex: 1 1 auto; white-space: nowrap; }
+.filter-prefix { flex: none; color: #8f8372; font-size: 12px; white-space: nowrap; }
+.filter-item-count { flex: none; min-width: 6ch; color: #8f8372; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
 
 /* Tri-state box: off is empty, include is a positive check, exclude is a negative cross. */
 .filter-state { position: relative; flex: none; width: 12px; height: 12px; background: #242221; border: 1px solid var(--rule); }

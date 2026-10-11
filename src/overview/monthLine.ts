@@ -2,7 +2,7 @@ import type { LineControllerDatasetOptions, ScriptableLineSegmentContext, Toolti
 import { hasStats, type MonthBucket } from "./stats";
 
 // Months with fewer matches that have a result than this are drawn as hollow points, and their tooltip gives the sample size
-const LOW_SAMPLE_MATCHES = 5;
+export const LOW_SAMPLE_MATCHES = 5;
 
 // Panel background, so a hollow point looks empty
 const PANEL_FILL = "#2a2625";
@@ -34,7 +34,7 @@ export function gapSegments(color: string): Pick<LineControllerDatasetOptions, "
   };
 }
 
-// Low-sample months get a hollow, dimmer point. Other months get a filled point of `radius`, and 0 hides it.
+// Low-sample months get a hollow, dimmer point. Other months get a filled point of `radius`.
 export function samplePoints(
   color: string,
   samples: number[],

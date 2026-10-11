@@ -67,18 +67,57 @@ function keysWithState(states: ReadonlyMap<string, ItemState>, state: ItemState)
   return new Set([...states].filter(([, value]) => value === state).map(([key]) => key));
 }
 
-export function applyFilters(matches: Match[], states: FilterState): Match[] {
-  const rules = FILTER_KEYS.map((key) => ({
+interface Rule {
+  valueOf: (match: Match) => string | null;
+  includes: Set<string>;
+  excludes: Set<string>;
+}
+
+function rulesFor(keys: readonly FilterKey[], states: FilterState): Rule[] {
+  return keys.map((key) => ({
     valueOf: VALUE_OF[key],
     includes: keysWithState(states[key], "include"),
     excludes: keysWithState(states[key], "exclude"),
   }));
+}
 
-  return matches.filter((match) =>
-    rules.every(({ valueOf, includes, excludes }) => {
-      const value = valueOf(match);
-      if (value !== null && excludes.has(value)) return false;
-      return includes.size === 0 || (value !== null && includes.has(value));
-    })
-  );
+function passes(match: Match, rules: Rule[]): boolean {
+  return rules.every(({ valueOf, includes, excludes }) => {
+    const value = valueOf(match);
+    if (value !== null && excludes.has(value)) return false;
+    return includes.size === 0 || (value !== null && includes.has(value));
+  });
+}
+
+// How many matches each item of one filter would add, given the other two filters. The filter's own state is left out,
+// so its counts do not move when its items are toggled. One pass over the matches, for the dropdown that is open.
+export function countItems(matches: Match[], states: FilterState, key: FilterKey): Map<string, number> {
+  const rules = rulesFor(FILTER_KEYS.filter((other) => other !== key), states);
+  const counts = new Map<string, number>();
+  for (const match of matches) {
+    if (!passes(match, rules)) continue;
+    const value = VALUE_OF[key](match);
+    if (value !== null) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export interface OrderedItems {
+  // Included, then excluded. Shown above the rest with a divider.
+  active: FilterItem[];
+  rest: FilterItem[];
+}
+
+// Each group sorts by count, most first. Ties keep the item's alphabetical order from the mapItems, modeItems, typeItems lists.
+export function orderItems(items: FilterItem[], states: ReadonlyMap<string, ItemState>, counts: ReadonlyMap<string, number>): OrderedItems {
+  const byCount = (a: FilterItem, b: FilterItem) => (counts.get(b.key) ?? 0) - (counts.get(a.key) ?? 0);
+  const included = items.filter((item) => states.get(item.key) === "include").sort(byCount);
+  const excluded = items.filter((item) => states.get(item.key) === "exclude").sort(byCount);
+  const rest = items.filter((item) => !states.has(item.key)).sort(byCount);
+  return { active: [...included, ...excluded], rest };
+}
+
+export function applyFilters(matches: Match[], states: FilterState): Match[] {
+  const rules = rulesFor(FILTER_KEYS, states);
+  return matches.filter((match) => passes(match, rules));
 }

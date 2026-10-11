@@ -1,19 +1,10 @@
 /* Overview tab only. Shared panels, wells, HUD numbers and bars come from base.css. */
 
-/* The two lower columns. align-items: start keeps each column as tall as its own panels, not the other column. */
-.overview-split {
+/* The lower panels in two rows: Game modes | Classes, then Records | Per match. Grid items stretch, so the panels in a row share a bottom edge. */
+.overview-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
   gap: 16px;
-}
-
-/* One column of panels with the same gap as the grid */
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
 }
 
 .hud-strip {
@@ -22,15 +13,6 @@
   justify-content: space-around;
   gap: 16px 24px;
   padding: 4px 0 8px;
-}
-
-.sub-title {
-  margin: 14px 0 6px;
-  font-family: "TF2 Build", sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  text-transform: uppercase;
-  color: var(--tan-muted);
 }
 
 /* Results: one split bar sized by share, then the legend under it */
@@ -90,25 +72,38 @@
   font-size: 14px;
 }
 
-/* Scoreboard-style team columns */
-.team-columns {
+/* Scoreboard-style team halves: each one is tinted in its team color, with the win rate as the biggest figure */
+.team-scores {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
 
-.team-column {
+.team-score {
+  --team: var(--rule);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
+  padding: 12px 10px;
+  background: color-mix(in srgb, var(--team) 25%, var(--page));
+  box-shadow: inset 0 0 0 1px var(--rule);
 }
 
-.team-column > header {
-  display: block;
-  padding: 4px 10px;
-  font-size: 16px;
+.team-score-red { --team: var(--red); }
+.team-score-blu { --team: var(--blu); }
+
+.team-score-rate {
+  color: var(--tan);
+  font: 40px/1 "TF2 Build", sans-serif;
+  text-shadow: 0 3px 0 #2a2623;
+}
+
+.team-score-note {
+  color: var(--tan-muted);
+  font-size: 13px;
 }
 
 /* Records, team rows: label left, value right, rule between rows */
@@ -137,10 +132,9 @@
   min-width: 0;
 }
 
+/* Row labels read as body text (TF2 Secondary), like the class and mode names. Values keep TF2 Build. */
 .record-label {
-  font-family: "TF2 Build", sans-serif;
   font-size: 14px;
-  text-transform: uppercase;
   color: var(--tan);
 }
 
@@ -163,68 +157,107 @@
   text-shadow: 2px 2px 0 #000;
 }
 
-/* Class icons lead the Classes bar labels. The label grows to fit the icon, so nothing is clipped. */
-.class-icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 6px; }
-
-/* The calendar and the hour section stack, each at full width. The hour grids are measured against this box. */
-.activity-body {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* The toggle sits on the calendar's heading row and wraps under it on narrow screens */
-.heat-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
-}
-
-/* One button per year with timed matches, newest first. They wrap onto more rows when there are many. */
-.year-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-/* Two grids side by side once the box is 900px wide. Each grid is about half, so its cells land near the calendar's cell size. */
-.hour-grids {
+/* Ranked lists (Classes, Game modes): a header row, then a row per item. The bar sits between the name and the numbers, which are right aligned in fixed columns.
+   Rows use subgrid so every row shares the list's columns. The list fills the well, but its rows stack from the top, so a short list leaves the space below. */
+.rank-list {
+  flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(84px, 160px) minmax(0, 1fr) 60px 64px 48px;
+  gap: 6px 8px;
+  align-items: center;
+  align-content: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.hour-grid {
-  min-width: 0;
+/* Game modes have no K/D column, so its numbers end at Win rate and line up with Classes' */
+.mode-list {
+  grid-template-columns: minmax(84px, 160px) minmax(0, 1fr) 60px 64px;
 }
 
-.hour-title {
-  margin: 0 0 6px;
-  font-family: "TF2 Build", sans-serif;
-  font-size: 12px;
-  font-weight: 400;
+.rank-head,
+.rank-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+/* The class icon is 20px, so every ranked row is at least that tall. Game modes have no icon, so this keeps its rows on the Classes rhythm. */
+.rank-row {
+  --bar-color: var(--orange);
+  min-height: 20px;
+  font-size: 13px;
+}
+
+.rank-head {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
+  font: 11px/1.2 "TF2 Build", sans-serif;
   text-transform: uppercase;
   color: var(--tan-muted);
 }
 
-@container (min-width: 900px) {
-  .hour-grids {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.rank-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--tan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rank-matches {
+  color: var(--tan);
+  font: 14px "TF2 Build", sans-serif;
+}
+
+/* Class icons lead the class names. The name grows to fit the icon, so nothing is clipped. */
+.class-icon { flex: none; width: 20px; height: 20px; margin-right: 6px; }
+
+/* The controls row, then one heatmap, then its summary or legend. Panel gap separates the untimed footnote below.
+   The body is the container, so cqw in the heatmaps measures the panel width, not the width of the view that happens to hold them. */
+.activity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  container-type: inline-size;
+}
+
+/* View, metric and period controls share one row and wrap on narrow screens. Groups sit further apart than the buttons inside them. */
+.activity-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+}
+
+/* A group is its small label (same style as the Maps panel's field labels) and its buttons */
+.activity-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-label {
+  font: 11px/1 "TF2 Build", sans-serif;
+  text-transform: uppercase;
+  color: var(--tan-muted);
 }
 
 /* Heatmaps: columns are weeks (calendar) or hours, rows are weekdays. Column 1 holds the weekday names and row 1 the axis labels.
    Items are placed explicitly in the heat-grid, so the hour grid's edge bars line up with its columns and rows.
    Columns share the free width equally, and every cell is square, so the cell size follows the panel width. */
-/* The container is the heatmap's own width, so cqw in .heat-grid measures the cells */
 .heat {
   --heat-mid: #8c7b5f;
   --heat-bar: color-mix(in srgb, var(--orange) 60%, var(--page));
-  container-type: inline-size;
 }
 
 .heat-scroll {
@@ -247,11 +280,16 @@
   color: var(--tan-muted);
 }
 
-/* The hour grid adds a column after the weekdays for the bars, 2.5 cells wide at most. Its bar row is 1.5 cells tall (see .heat-edge-hour). */
+/* The hour grid's squares are the calendar's cell size: the calendar fits 53 week columns, each cell 10% narrower than its column pitch.
+   So the two views are the same height, with the same gap and cell size. The grid stays left aligned. The day bars get a 240px column
+   at the right, and the hour bars are one square tall (see .heat-edge-hour). */
 .heat-grid-hours {
+  --gap: clamp(2px, calc(100cqw / 53 * 0.1), 6px);
+  --cell: max(12px, calc((100cqw - 2.5em) / 53 - var(--gap)));
   --cells: calc(var(--columns) + 2.5);
   --gaps: calc(var(--columns) + 2);
-  grid-template-columns: auto repeat(var(--columns), minmax(12px, 1fr)) minmax(30px, 2.5fr);
+  grid-template-columns: auto repeat(var(--columns), var(--cell)) 240px;
+  justify-content: start;
 }
 
 .heat-day {
@@ -315,8 +353,8 @@ button.heat-cell {
 
 /* Edge bars: hour bars rise from one baseline at the bottom of their row, weekday bars grow right from the left of their column.
    Matches mode uses the default bar color. Win rate mode colors them by rate, and their length still means match count. */
-/* The box is the full edge area, and the bar is its ::before, so the bar length scales with the box. Hour boxes are 1.5 cells tall,
-   weekday boxes are 2.5 cells wide and one cell tall. */
+/* The box is the full edge area, and the bar is its ::before, so the bar length scales with the box. Hour boxes are one cell tall,
+   weekday boxes are the 240px column and one cell tall. The weekday bar stops 4em short of the box so its value fits at the end. */
 .heat-edge {
   position: relative;
 }
@@ -328,7 +366,7 @@ button.heat-cell {
 }
 
 .heat-edge-hour {
-  aspect-ratio: 2 / 3;
+  height: var(--cell);
 }
 
 .heat-edge-hour::before {
@@ -338,15 +376,20 @@ button.heat-cell {
   height: calc(var(--share) * 100%);
 }
 
-.heat-edge-day {
-  aspect-ratio: 5 / 2;
-}
-
 .heat-edge-day::before {
   top: 0;
   bottom: 0;
   left: 0;
-  width: calc(var(--share) * 100%);
+  width: calc(var(--share) * (100% - 4em));
+}
+
+/* The count or win rate printed just past the end of a weekday bar */
+.heat-edge-value {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--share) * (100% - 4em) + 6px);
+  transform: translateY(-50%);
+  white-space: nowrap;
 }
 
 /* Scale under each grid, as the grid's last row so it starts at the first cell column. Swatches match a cell (the grid width
@@ -430,65 +473,140 @@ button.heat-cell {
   color: var(--tan-muted);
 }
 
+/* The two views share one grid cell, so the panel is as tall as the taller view. The hidden view keeps its space and cannot be focused or clicked. */
+.activity-views {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.activity-view {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activity-view.is-hidden {
+  visibility: hidden;
+}
+
+/* The weekday grid, with its stat list to the right. The list wraps under the grid when the panel is too narrow for both.
+   The list stretches to the grid's height, so its well ends with the legend. The grid keeps its own height. */
+.activity-weekday {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px 24px;
+}
+
+.activity-weekday > .heat {
+  flex: 0 1 auto;
+  align-self: flex-start;
+  min-width: 0;
+}
+
+.activity-records {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .activity-modes {
   display: flex;
   gap: 6px;
 }
 
-/* The period buttons with the Month select after them. The select wraps under them on narrow screens. */
-.activity-scope {
+/* "<" year ">" with the year between the buttons, kept at a fixed width so the buttons do not move while paging */
+.year-pager {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
-/* Per match: four small multiples in one row, stacked two-up on narrow screens */
-.multiples {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+.year-pager-year {
+  min-width: 4ch;
+  font-family: "TF2 Build", sans-serif;
+  font-size: 14px;
+  text-align: center;
+  color: var(--tan);
 }
 
-.small-multiple {
+/* Footnote for matches without a time, small and muted so it reads as a note under the heatmap */
+.untimed-note {
+  font-size: 12px;
+}
+
+/* Queue times: the chart and its stat list stack under 900px. Above that they sit side by side, and the chart grows to the list's height.
+   The canvas is absolute so the chart does not set the row height, and a short list still leaves the chart its 180px. */
+@media (min-width: 901px) {
+  .queue-body {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 16px;
+  }
+
+  .queue-body > .chart-box {
+    height: auto;
+    min-height: var(--h, 260px);
+  }
+
+  .queue-body > .chart-box canvas {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+/* Per match: six averages in a 3 x 2 grid inside a well. The grid fills the well, so its cells are the height of the Records list.
+   Thin rules between cells match the Records row dividers. */
+.multiples {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.multiples .hud-stat {
+  justify-content: center;
+  align-items: center;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.multiples > :not(:nth-child(3n)) {
+  border-right: 1px solid var(--rule);
+}
+
+.multiples > :nth-child(-n + 3) {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Wells in the panels that share a row fill their panel, so the two wells in a row end on the same line */
+.modes-panel > .well,
+.classes-panel > .well,
+.records-panel > .well,
+.per-match-panel > .well,
+.activity-records > .well,
+.queue-body > .well {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+}
+
+/* Record lists fill their well, but rows keep their natural height and stack from the top, so a short list leaves the space below */
+.records-panel .record-list,
+.activity-records .record-list,
+.queue-body .record-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 900px) {
-  .multiples {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .team-columns {
+  /* One column in DOM order: Game modes, Classes, Records, then Per match */
+  .overview-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* One column: the stacks disappear (display: contents) and their panels take the order Game modes, Classes, Queue times, Records */
-  .overview-split {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .overview-split > .stack {
-    display: contents;
-  }
-
-  .modes-panel {
-    order: 1;
-  }
-
-  .classes-panel {
-    order: 2;
-  }
-
-  .queue-panel {
-    order: 3;
-  }
-
-  .records-panel {
-    order: 4;
   }
 }
 
@@ -502,5 +620,15 @@ button.heat-cell {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+  }
+
+  /* Narrower number columns, sized to their headers, so the bars keep some width */
+  .rank-list {
+    grid-template-columns: 92px minmax(0, 1fr) 56px 58px 36px;
+    gap: 6px;
+  }
+
+  .mode-list {
+    grid-template-columns: 92px minmax(0, 1fr) 56px 58px;
   }
 }
