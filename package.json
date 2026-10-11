@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "maps": "node --experimental-strip-types scripts/map-data/cli.ts"
+    "maps": "node --experimental-strip-types scripts/map-data/cli.ts",
+    "datacenters": "node --experimental-strip-types scripts/datacenters.ts"
   },
   "version": "1.0.0",
   "dependencies": {

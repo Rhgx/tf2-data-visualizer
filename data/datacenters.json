@@ -1,0 +1,182 @@
+{
+  "ams": {
+    "name": "Amsterdam (Netherlands)",
+    "short": "Amsterdam, NL",
+    "country": "NL"
+  },
+  "atl": {
+    "name": "Atlanta (Georgia)",
+    "short": "Atlanta, US",
+    "country": "US"
+  },
+  "bom2": {
+    "name": "Mumbai (India)",
+    "short": "Mumbai, IN",
+    "country": "IN"
+  },
+  "dfra": {
+    "name": "Datapacket Frankfurt (Germany)",
+    "short": "Frankfurt, DE",
+    "country": "DE"
+  },
+  "dfw": {
+    "name": "Dallas (Texas)",
+    "short": "Dallas, US",
+    "country": "US"
+  },
+  "dlhr": {
+    "name": "Datapacket London (England)",
+    "short": "London, GB",
+    "country": "GB"
+  },
+  "dsto": {
+    "name": "Datapacket Stockholm (Sweden)",
+    "short": "Stockholm, SE",
+    "country": "SE"
+  },
+  "dvie": {
+    "name": "Datapacket Vienna (Austria)",
+    "short": "Vienna, AT",
+    "country": "AT"
+  },
+  "dxb": {
+    "name": "Dubai (United Arab Emirates)",
+    "short": "Dubai, AE",
+    "country": "AE"
+  },
+  "eat": {
+    "name": "Wenatchee (Washington)",
+    "short": "Wenatchee, US",
+    "country": "US"
+  },
+  "eze": {
+    "name": "Buenos Aires (Argentina)",
+    "short": "Buenos Aires, AR",
+    "country": "AR"
+  },
+  "fra": {
+    "name": "Frankfurt (Germany)",
+    "short": "Frankfurt, DE",
+    "country": "DE"
+  },
+  "fsn": {
+    "name": "Hetzner Falkenstein (Germany)",
+    "short": "Falkenstein, DE",
+    "country": "DE"
+  },
+  "gru": {
+    "name": "Sao Paulo (Brazil)",
+    "short": "Sao Paulo, BR",
+    "country": "BR"
+  },
+  "gum": {
+    "name": "Guam",
+    "short": "Guam, GU",
+    "country": "GU"
+  },
+  "hel": {
+    "name": "Hetzner Helsinki (Finland)",
+    "short": "Helsinki, FI",
+    "country": "FI"
+  },
+  "hkg": {
+    "name": "Hong Kong",
+    "short": "Hong Kong, HK",
+    "country": "HK"
+  },
+  "iad": {
+    "name": "Sterling (Virginia)",
+    "short": "Sterling, US",
+    "country": "US"
+  },
+  "jnb": {
+    "name": "Johannesburg (South Africa)",
+    "short": "Johannesburg, ZA",
+    "country": "ZA"
+  },
+  "lax": {
+    "name": "Los Angeles (California)",
+    "short": "Los Angeles, US",
+    "country": "US"
+  },
+  "lhr": {
+    "name": "London (England)",
+    "short": "London, GB",
+    "country": "GB"
+  },
+  "lim": {
+    "name": "Lima (Peru)",
+    "short": "Lima, PE",
+    "country": "PE"
+  },
+  "maa2": {
+    "name": "Chennai - Ambattur (India)",
+    "short": "Chennai, IN",
+    "country": "IN"
+  },
+  "mad": {
+    "name": "Madrid (Spain)",
+    "short": "Madrid, ES",
+    "country": "ES"
+  },
+  "ord": {
+    "name": "Chicago (Illinois)",
+    "short": "Chicago, US",
+    "country": "US"
+  },
+  "par": {
+    "name": "Paris (France)",
+    "short": "Paris, FR",
+    "country": "FR"
+  },
+  "scl": {
+    "name": "Santiago (Chile)",
+    "short": "Santiago, CL",
+    "country": "CL"
+  },
+  "sea": {
+    "name": "Seattle (Washington)",
+    "short": "Seattle, US",
+    "country": "US"
+  },
+  "seo": {
+    "name": "Seoul (South Korea)",
+    "short": "Seoul, KR",
+    "country": "KR"
+  },
+  "sgp": {
+    "name": "Singapore",
+    "short": "Singapore, SG",
+    "country": "SG"
+  },
+  "sto": {
+    "name": "Stockholm - Kista (Sweden)",
+    "short": "Stockholm, SE",
+    "country": "SE"
+  },
+  "sto2": {
+    "name": "Stockholm - Bromma (Sweden)",
+    "short": "Stockholm, SE",
+    "country": "SE"
+  },
+  "syd": {
+    "name": "Sydney (Australia)",
+    "short": "Sydney, AU",
+    "country": "AU"
+  },
+  "tyo": {
+    "name": "Tokyo Koto City (Japan)",
+    "short": "Tokyo, JP",
+    "country": "JP"
+  },
+  "vie": {
+    "name": "Vienna (Austria)",
+    "short": "Vienna, AT",
+    "country": "AT"
+  },
+  "waw": {
+    "name": "Warsaw (Poland)",
+    "short": "Warsaw, PL",
+    "country": "PL"
+  }
+}

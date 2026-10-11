@@ -21,6 +21,7 @@
     "vite.config.ts",
     "scripts/map-data/cli.ts",
     "scripts/map-data/maps.ts",
-    "scripts/map-data/modes.ts"
+    "scripts/map-data/modes.ts",
+    "scripts/datacenters.ts"
   ]
 }
