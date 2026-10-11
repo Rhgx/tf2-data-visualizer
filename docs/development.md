@@ -83,6 +83,12 @@ The country code comes from the parenthesized country or US state at the end of 
 
 Each refresh also downloads one flag per country in the file into `public/ui/flags/<code>.svg` (such as `public/ui/flags/se.svg`). The download is pinned by `TWEMOJI_TAG` in the script (currently `v17.0.3`), so a refresh gives the same artwork; change the tag on purpose. The app serves these files directly, with no request to a CDN at runtime. Flags for countries that no longer appear in the config are not deleted. The flag artwork's license is in [credits](credits.md).
 
+## Updating the update list
+
+`src/data/updates.ts` exports `UPDATES`, the TF2 updates that the Trends and Queue times charts can mark and the Activity calendar can outline. Each entry has a `date` (`"YYYY-MM-DD"`), a `name`, and a `kind`: `major` for the big updates, or `halloween`, `smissmas`, or `summer` for the seasonal ones. The names are the TF2 Wiki page titles, and the dates come from the wiki's [Patches](https://wiki.teamfortress.com/wiki/Patches) pages. The list starts with Meet Your Match (July 2016) and stays oldest first.
+
+The list is edited by hand, with no script, so add each update when it ships. The data is imported at build time, so run `pnpm build` or restart `pnpm dev` after editing it.
+
 ## Updating the badges
 
 The README badges are TF2 item-tooltip style SVGs in `docs/badges/`, made by `scripts/make-badges.py`. The script reads the game fonts in `public/ui/fonts` (WOFF2, which needs brotli to decode) and downloads the icons from Simple Icons through cdn.jsdelivr.net. It needs fonttools and brotli:

@@ -1,3 +1,5 @@
+import { UPDATE_KIND_LABELS, UPDATES, type TfUpdate } from "../data/updates";
+
 // Chart.js is registered and styled in Chart.tsx. This file only holds colors and month helpers, so it does not import Chart.js.
 export const palette = {
   red: "#b8383b", // RED team, Kills
@@ -53,4 +55,49 @@ const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "short", year: 
 export function monthLabel(key: string): string {
   const [year, month] = key.split("-").map(Number);
   return monthFormatter.format(new Date(year, month - 1));
+}
+
+// A TF2 update on the chart. x is the category position of its release day, so the line sits inside its month.
+export interface UpdateMarker {
+  x: number;
+  name: string;
+  major: boolean;
+}
+
+// Splits an update's "YYYY-MM-DD" date into its "YYYY-MM" month key and day of month. Read as text, so no timezone shifts it.
+function splitUpdateDate(date: string): { key: string; day: number } {
+  const [year, month, day] = date.split("-");
+  return { key: `${year}-${month}`, day: Number(day) };
+}
+
+// Markers for the updates released in the chart's months. The month keys are consecutive, so category i spans
+// [i - 0.5, i + 0.5] and a release day sits at its fraction of that span.
+export function updateMarkers(monthKeys: string[]): UpdateMarker[] {
+  const markers: UpdateMarker[] = [];
+  for (const update of UPDATES) {
+    const { key, day } = splitUpdateDate(update.date);
+    const index = monthKeys.indexOf(key);
+    if (index === -1) continue;
+    // Day 0 of the following month is the last day of this one. UTC keeps the local timezone out of the count.
+    const [year, month] = key.split("-").map(Number);
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    markers.push({ x: index - 0.5 + (day - 0.5) / daysInMonth, name: update.name, major: update.kind === "major" });
+  }
+  return markers;
+}
+
+export function updatesInMonth(key: string): TfUpdate[] {
+  return UPDATES.filter((update) => splitUpdateDate(update.date).key === key);
+}
+
+// Built once, like monthFormatter. Update dates are plain calendar days, so this formats in UTC.
+const updateDateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
+// Tooltip lines for the updates released in a month, like "Scream Fortress XVIII (Oct 1, Halloween update)"
+export function updateTooltipLines(key: string): string[] {
+  return updatesInMonth(key).map((update) => {
+    const [year, month, day] = update.date.split("-").map(Number);
+    const date = updateDateFormatter.format(Date.UTC(year, month - 1, day));
+    return `${update.name} (${date}, ${UPDATE_KIND_LABELS[update.kind]})`;
+  });
 }

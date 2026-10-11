@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { monthLabel } from "../charts/theme";
 import { Panel, PanelNote } from "../ui/Panel";
 import { TfButton } from "../ui/Button";
+import { isUpdatesShown, subscribeUpdates } from "../ui/updatesShown";
 import { HeatGrid, THIN_RESULTS, heatAmount, type ActivityMode } from "./Heatmap";
 import { RecordList } from "./RecordList";
 import { UntimedNote } from "./UntimedNote";
@@ -88,6 +89,8 @@ function TimedActivity({ timed, firstTime, onShowDay }: TimedActivityProps) {
   // The weekday grid's period. The month is only read while the scope is "month", and a year change clears it.
   const [scope, setScope] = useState<HourScope>("all");
   const [month, setMonth] = useState<string | null>(null);
+  // The dashboard's Updates toggle. Only the calendar reads it, since the weekday grid has no days to outline.
+  const showUpdates = useSyncExternalStore(subscribeUpdates, isUpdatesShown);
   const years = useMemo(() => yearsOf(timed), [timed]);
   // The calendar and the weekday grid's Year scope share this year
   const year = picked?.from === timed ? picked.year : years[0];
@@ -157,7 +160,14 @@ function TimedActivity({ timed, firstTime, onShowDay }: TimedActivityProps) {
       {/* Both views share one grid cell, so the panel is as tall as the taller view. The hidden one keeps its space, so switching does not move the panel. */}
       <div className="activity-views">
         <div className={view === "calendar" ? "activity-view" : "activity-view is-hidden"}>
-          <HeatGrid columns={columns} cuts={dayCuts} mode={metric} variant="heat-grid-calendar" onPickDay={onShowDay} />
+          <HeatGrid
+            columns={columns}
+            cuts={dayCuts}
+            mode={metric}
+            variant="heat-grid-calendar"
+            onPickDay={onShowDay}
+            markUpdates={showUpdates}
+          />
           <p className="activity-summary">{yearSummaryText(year, summary)}</p>
         </div>
         <div className={view === "weekday" ? "activity-view" : "activity-view is-hidden"}>

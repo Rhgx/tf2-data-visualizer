@@ -13,8 +13,10 @@ import {
   Tooltip,
   type ChartConfiguration,
   type ChartType,
+  type Plugin,
   type TooltipPositionerFunction,
 } from "chart.js";
+import type { UpdateMarker } from "./theme";
 
 // Only the controllers, elements, scales and plugins the charts use. Chart.register(...registerables) keeps every
 // type, including the ones no chart here uses. A new chart type needs its controller, elements and scale added here.
@@ -47,6 +49,10 @@ Chart.defaults.plugins.tooltip.borderWidth = 1;
 Chart.defaults.plugins.tooltip.titleColor = "#ffd700";
 Chart.defaults.plugins.tooltip.titleFont = { family: `"TF2 Build", sans-serif` };
 Chart.defaults.plugins.tooltip.bodyColor = "#ebe2ca";
+// The footer holds the update lines, so they read gold and apart from the stats above them
+Chart.defaults.plugins.tooltip.footerColor = "#ffd700";
+Chart.defaults.plugins.tooltip.footerFont = { weight: "normal" };
+Chart.defaults.plugins.tooltip.footerMarginTop = 6;
 Chart.defaults.plugins.tooltip.cornerRadius = 2;
 Chart.defaults.plugins.tooltip.padding = 10;
 
@@ -56,6 +62,10 @@ const CURSOR_OFFSET = 14;
 declare module "chart.js" {
   interface TooltipPositionerMap {
     cursor: TooltipPositionerFunction<ChartType>;
+  }
+  // Unset on charts without update markers, so the plugin below draws nothing for them
+  interface PluginOptionsByType<TType extends ChartType> {
+    updateMarkers?: { markers: UpdateMarker[] };
   }
 }
 Tooltip.positioners.cursor = function (items, eventPosition) {
@@ -68,6 +78,35 @@ Tooltip.positioners.cursor = function (items, eventPosition) {
   return { x: x + offsetX, y: y + offsetY };
 };
 Chart.defaults.plugins.tooltip.position = "cursor";
+
+// One plugin serves every chart, since ChartCanvas never re-applies config.plugins. A chart opts in through
+// options.plugins.updateMarkers. Drawn after the datasets, so the lines sit over the bars and the line.
+const updateMarkersPlugin: Plugin<ChartType, { markers?: UpdateMarker[] }> = {
+  id: "updateMarkers",
+  afterDatasetsDraw(chart, _args, options) {
+    const { markers } = options;
+    if (!markers) return;
+    const { ctx, chartArea, scales } = chart;
+    ctx.save();
+    for (const marker of markers) {
+      // Line charts put the first and last month points on the plot edges, so a release in the outer half of
+      // those months is clamped to the edge (at most half a month off). The left edge snaps to a whole pixel, so
+      // a 1px line fills one pixel column and a 2px line fills two, with no blur across the neighbours.
+      const width = marker.major ? 2 : 1;
+      const x = Math.round(scales.x.getPixelForValue(marker.x) - width / 2);
+      const left = Math.min(Math.max(x, chartArea.left), chartArea.right - width);
+      ctx.lineWidth = width;
+      ctx.strokeStyle = marker.major ? "rgba(255, 215, 0, 0.9)" : "rgba(235, 226, 202, 0.75)";
+      ctx.setLineDash(marker.major ? [] : [4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(left + width / 2, chartArea.top);
+      ctx.lineTo(left + width / 2, chartArea.bottom);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+};
+Chart.register(updateMarkersPlugin);
 
 // CSSProperties has no custom properties, so --h is added to the type instead of casting the style object.
 type ChartBoxStyle = CSSProperties & Record<`--${string}`, string | number>;

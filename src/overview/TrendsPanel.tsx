@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { ChartConfiguration, ChartDataset, Tick } from "chart.js";
 import { ChartCanvas } from "../charts/Chart";
-import { monthLabel, palette } from "../charts/theme";
+import { monthLabel, palette, updateMarkers, updateTooltipLines } from "../charts/theme";
 import { SelectField } from "../ui/Field";
 import { Panel, PanelNote } from "../ui/Panel";
+import { isUpdatesShown, subscribeUpdates } from "../ui/updatesShown";
 import { formatNumber } from "../lib/format";
 import { hasStats, LINE_STYLE, monthKd, monthWinPercent, type MonthBucket, type StatField, statAverage, type TimedMatch } from "./stats";
 import { emptyMonthNote, gapSegments, resultCount, samplePoints, type Series, seriesLabel } from "./monthLine";
@@ -93,7 +94,8 @@ interface TrendsPanelProps {
 }
 
 export function TrendsPanel({ timed, months, metric, onMetricChange }: TrendsPanelProps) {
-  const config = useMemo(() => trendConfig(metric, months), [metric, months]);
+  const showUpdates = useSyncExternalStore(subscribeUpdates, isUpdatesShown);
+  const config = useMemo(() => trendConfig(metric, months, showUpdates), [metric, months, showUpdates]);
 
   // The select gives back a string, so the metric is looked up by its key
   function selectMetric(key: string) {
@@ -120,7 +122,8 @@ export function TrendsPanel({ timed, months, metric, onMetricChange }: TrendsPan
   );
 }
 
-function trendConfig(metric: TrendMetric, months: MonthBucket[]): ChartConfiguration<"bar" | "line"> {
+function trendConfig(metric: TrendMetric, months: MonthBucket[], showUpdates: boolean): ChartConfiguration<"bar" | "line"> {
+  const monthKeys = months.map((month) => month.key);
   const values = months.map((month) => metric.value(month.matches));
   const samples = months.map(resultCount);
   const series: Series = { label: metric.label, format: metric.format, values, samples: metric.bars ? undefined : samples };
@@ -150,11 +153,14 @@ function trendConfig(metric: TrendMetric, months: MonthBucket[]): ChartConfigura
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { display: false },
+        updateMarkers: showUpdates ? { markers: updateMarkers(monthKeys) } : undefined,
         tooltip: {
           callbacks: {
             // Only line months need a note, since a bar month with no matches already reads as 0
             beforeBody: metric.bars ? undefined : emptyMonthNote(months),
             label: seriesLabel([series]),
+            // Lists the updates released in the hovered month, in the gold footer under the value
+            footer: showUpdates ? (items) => updateTooltipLines(monthKeys[items[0].dataIndex]) : undefined,
           },
         },
       },

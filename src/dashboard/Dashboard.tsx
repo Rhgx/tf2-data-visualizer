@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type JSX, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore, type JSX, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Match } from "../data/match";
 import { formatNumber } from "../lib/format";
 import { whenIdle } from "../lib/idle";
@@ -9,8 +9,10 @@ import { OverviewTab } from "../overview/OverviewTab";
 import { TrendsTab } from "../overview/TrendsTab";
 import { earliestTime } from "../overview/stats";
 import { ErrorBoundary } from "../ui/ErrorBoundary";
+import { CheckField } from "../ui/Field";
 import { playSound } from "../ui/sound";
 import { SoundButton } from "../ui/SoundButton";
+import { isUpdatesShown, setUpdatesShown, subscribeUpdates } from "../ui/updatesShown";
 import { FilterMenu } from "./FilterMenu";
 import {
   applyFilters,
@@ -72,6 +74,7 @@ export function Dashboard({ matches, onBack }: DashboardProps): JSX.Element {
   const [focus, setFocus] = useState<MatchFocus | null>(null);
   const [query, setQuery] = useState<MatchQuery | null>(null);
   const filterStripRef = useRef<HTMLDivElement>(null);
+  const updatesShown = useSyncExternalStore(subscribeUpdates, isUpdatesShown);
 
   const items = useMemo(
     () => ({ maps: mapItems(matches), modes: modeItems(matches), types: typeItems(matches) }),
@@ -227,6 +230,12 @@ export function Dashboard({ matches, onBack }: DashboardProps): JSX.Element {
               onToggle={() => toggleFilter("types")}
               onCycle={(key) => cycleItem("types", key)}
               onClear={() => clearItems("types")}
+            />
+            <CheckField
+              label="TF2 Updates"
+              tip="Show TF2 update releases on the Trends and queue time charts and the Activity calendar"
+              checked={updatesShown}
+              onChange={setUpdatesShown}
             />
           </div>
         </div>

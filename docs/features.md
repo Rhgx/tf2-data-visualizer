@@ -20,7 +20,7 @@ Per match shows six averages in a 3 by 2 grid. Kills, deaths, damage, healing, a
 
 Activity shows one heatmap at a time. The View control switches it between Calendar and Weekday × hour. Calendar offers Matches, Hours, and Win rate, and Weekday × hour offers Matches and Win rate, so switching to it changes Hours to Matches. Both views share one footprint, so switching does not move the panel.
 
-Calendar shows one year at a time. The arrows page to an older or newer year, and only years with timed matches are reached. The newest year is selected by default, and any change to the filters selects the newest year again. Days with matches are buttons that open the Matches tab searched for that day. Days after today, and days before the first match in the upload, are empty outlines with no tooltip, and today has a tan outline. A line under the calendar summarizes the selected year: its matches, the days played, the busiest day, and the longest run of days with matches.
+Calendar shows one year at a time. The arrows page to an older or newer year, and only years with timed matches are reached. The newest year is selected by default, and any change to the filters selects the newest year again. Days with matches are buttons that open the Matches tab searched for that day. Days after today, and days before the first match in the upload, are empty outlines with no tooltip, and today has a tan outline. With Updates on, the days TF2 updates released get a frame, gold for major updates and tan for seasonal ones, and the day's tooltip names the update. A line under the calendar summarizes the selected year: its matches, the days played, the busiest day, and the longest run of days with matches.
 
 Each cell is shaded by its level. Matches and Hours show five swatches with a tick between each pair, labeled with the first match count (or duration, such as `23m` or `1.6h`) of the next level. Win rate shows a RED to BLU ramp, plus a faded swatch labeled `<3` for cells with fewer than 3 results. Matches and Hours cut their levels at the 25th, 50th, 75th, and 90th percentiles of their non-zero values, so the brightest level holds only the busiest tenth. The calendar's cut points come from every year, so the years compare on one scale. In Win rate mode each cell is tinted by its rate, and cells with fewer than 3 results are drawn faint. The edge bars always set their length by match count.
 
@@ -30,7 +30,7 @@ The Period buttons set the scope to All time, Year, or Month. Year uses the cale
 
 Matches without a timestamp are left out of the heatmap and Trends. A footnote under the Activity panel gives their count.
 
-Queue times sits below the heatmap. Its histogram sits beside the stats, stacked under 900px: the average and total queue time, the longest and shortest queue (each with a View link), and the number of matches joined in progress. With no queue times, the panel shows a note and the joined count. The View control switches the chart between Spread, the histogram; Over time, each month's median queue time with a shaded band for the 25th to 75th percentile; and Time of day, the same by local hour. Months and hours with fewer than 5 queued matches are drawn as hollow points.
+Queue times sits below the heatmap. Its histogram sits beside the stats, stacked under 900px: the average and total queue time, the longest and shortest queue (each with a View link), and the number of matches joined in progress. With no queue times, the panel shows a note and the joined count. The View control switches the chart between Spread, the histogram; Over time, each month's median queue time with a shaded band for the 25th to 75th percentile; and Time of day, the same by local hour. Months and hours with fewer than 5 queued matches are drawn as hollow points. With Updates on, Over time draws the same update lines as Trends. Spread and Time of day never show them.
 
 ## Trends
 
@@ -38,7 +38,7 @@ Trends is one monthly chart that fills the window, with a 320px minimum height, 
 
 A stat strip above the chart follows the metric, with All time, Best month, Worst month, and Last 12 months. Best and worst only use months with at least 5 matches behind them (matches with a result, for rates and averages), and a tie keeps the earlier month. The strip is hidden when no match has a recorded time.
 
-The chart has one point per calendar month, from the first to the last timed match. A month with no value leaves a dashed, dimmer gap. On the line metrics, a month with fewer than 5 matches that have a result is a hollow point, and its tooltip gives the sample size.
+The chart has one point per calendar month, from the first to the last timed match. A month with no value leaves a dashed, dimmer gap. On the line metrics, a month with fewer than 5 matches that have a result is a hollow point, and its tooltip gives the sample size. With Updates on, a thin vertical line is drawn in each month at the day an update was released: solid gold for major updates, dashed tan for seasonal ones. Hovering a month lists its updates in gold under the value, such as Scream Fortress XVIII (Oct 1, Halloween update).
 
 ## Maps
 
@@ -57,6 +57,8 @@ A click on a row, or Enter or Space on it, opens its details below the row. Thes
 ## Filters
 
 The Maps, Modes, and Type dropdowns in the header apply to every tab. Type is the match type column of the CSV, and a blank value counts as Unknown. Each item cycles through three states: off, included, and excluded. An included item keeps only the matches with that value, and an excluded item drops them. The Clear filters button in the header resets them all.
+
+The TF2 Updates checkbox beside the dropdowns is one setting for the whole dashboard, checked when it is on. It is off by default and remembered in this browser. When it is on, the Trends chart, the queue times Over time chart, and the Activity calendar mark the TF2 update releases, and the sections above say how. A tooltip on a marked day or month names each update in gold with its date and kind.
 
 Each dropdown shows its active count, such as Maps (2), and has a Clear link. Its item counts are the matches each item would give with the other two filters applied. Items that would give none are dimmed and listed last. Included and excluded items are pinned to the top when the dropdown opens. The search box finds items by name, and the arrow keys move through the list.
 

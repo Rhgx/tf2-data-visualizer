@@ -1,5 +1,6 @@
 // Any element with a data-tip attribute shows its text in one shared tooltip. The listeners are on the document,
 // so buttons and other elements only need the attribute. Importing this module installs them once.
+// An optional data-tip-note adds a gold note under the text, one line per "\n".
 
 const GAP = 6;
 const MARGIN = 8;
@@ -30,6 +31,12 @@ function show(element: HTMLElement): void {
   if (document.activeElement instanceof HTMLSelectElement) return;
   anchor = element;
   tooltip.textContent = element.dataset.tip ?? "";
+  if (element.dataset.tipNote) {
+    const note = document.createElement("span");
+    note.className = "item-tooltip-note";
+    note.textContent = element.dataset.tipNote;
+    tooltip.append("\n", note);
+  }
   tooltip.showPopover();
   element.setAttribute("aria-describedby", "tooltip");
   removalObserver.observe(document, { childList: true, subtree: true });

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import type { ChartConfiguration, ChartDataset } from "chart.js";
 import { ChartCanvas } from "../charts/Chart";
-import { monthLabel, palette } from "../charts/theme";
+import { monthLabel, palette, updateMarkers, updateTooltipLines } from "../charts/theme";
 import { Panel, PanelNote } from "../ui/Panel";
+import { isUpdatesShown, subscribeUpdates } from "../ui/updatesShown";
 import { formatNumber, formatShortDuration } from "../lib/format";
 import type { Match } from "../data/match";
 import { ChoiceGroup, type Choice } from "./ActivityPanel";
@@ -45,7 +46,8 @@ const MEDIAN = 2;
 
 export function QueuePanel({ queued, joined, onFocusMatch }: QueuePanelProps) {
   const [view, setView] = useState<QueueView>("spread");
-  const config = useMemo(() => queueConfig(queued, view), [queued, view]);
+  const showUpdates = useSyncExternalStore(subscribeUpdates, isUpdatesShown);
+  const config = useMemo(() => queueConfig(queued, view, showUpdates), [queued, view, showUpdates]);
   const rows = useMemo(() => {
     const list: (RecordRow | null)[] = [
       { label: "Avg queue", value: formatShortDuration(averageOf(queued, "queueSeconds")) },
@@ -87,11 +89,11 @@ export function QueuePanel({ queued, joined, onFocusMatch }: QueuePanelProps) {
 }
 
 // Null for a time view with no queued match that has a recorded time, so the panel shows a note instead of an empty chart
-function queueConfig(queued: Match[], view: QueueView): ChartConfiguration<"bar" | "line"> | null {
+function queueConfig(queued: Match[], view: QueueView, showUpdates: boolean): ChartConfiguration<"bar" | "line"> | null {
   if (view === "spread") return spreadConfig(queued);
   const timed = timedMatches(queued);
   if (timed.length === 0) return null;
-  return view === "time" ? overTimeConfig(timed) : timeOfDayConfig(timed);
+  return view === "time" ? overTimeConfig(timed, showUpdates) : timeOfDayConfig(timed);
 }
 
 function spreadConfig(queued: Match[]): ChartConfiguration<"bar" | "line"> {
@@ -135,6 +137,8 @@ interface TimeAxis {
   titles: string[];
   // Months let Chart.js thin the labels. The hour axis keeps its every-third labels, so Chart.js must not skip them.
   autoSkip: boolean;
+  // Month key per bucket, set only when update markers are on. Unset on the hour view, which draws none.
+  monthKeys?: string[];
 }
 
 function spreadChart(buckets: (QueueSpread | null)[], axis: TimeAxis): ChartConfiguration<"bar" | "line"> {
@@ -170,6 +174,7 @@ function spreadChart(buckets: (QueueSpread | null)[], axis: TimeAxis): ChartConf
     },
   ];
 
+  const monthKeys = axis.monthKeys;
   return {
     type: "line",
     data: { labels: axis.labels, datasets },
@@ -177,6 +182,7 @@ function spreadChart(buckets: (QueueSpread | null)[], axis: TimeAxis): ChartConf
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { display: false },
+        updateMarkers: monthKeys ? { markers: updateMarkers(monthKeys) } : undefined,
         tooltip: {
           // Only the median is listed, so the two band edges do not add lines of their own
           filter: (item) => item.datasetIndex === MEDIAN,
@@ -191,6 +197,8 @@ function spreadChart(buckets: (QueueSpread | null)[], axis: TimeAxis): ChartConf
                 `Matches: ${formatNumber(bucket.count)}`,
               ];
             },
+            // Lists the updates released in the hovered month, in the gold footer under the median
+            footer: monthKeys ? (items) => updateTooltipLines(monthKeys[items[0].dataIndex]) : undefined,
           },
         },
       },
@@ -202,12 +210,12 @@ function spreadChart(buckets: (QueueSpread | null)[], axis: TimeAxis): ChartConf
   };
 }
 
-function overTimeConfig(timed: TimedMatch[]): ChartConfiguration<"bar" | "line"> {
+function overTimeConfig(timed: TimedMatch[], showUpdates: boolean): ChartConfiguration<"bar" | "line"> {
   const months = monthBuckets(timed);
   const labels = months.map((month) => monthLabel(month.key));
   return spreadChart(
     months.map((month) => spreadOf(month.matches)),
-    { labels, titles: labels, autoSkip: true }
+    { labels, titles: labels, autoSkip: true, monthKeys: showUpdates ? months.map((month) => month.key) : undefined }
   );
 }
 

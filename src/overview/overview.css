@@ -336,6 +336,25 @@
   box-shadow: inset 0 0 0 1px var(--tan);
 }
 
+/* Update days get a frame from ::after, drawn over the cell's edge. The dark hairline inside it keeps the tan ring apart
+   from bright fills. The frame does not change the layout, and it covers today's inset ring on an update day. */
+.heat-cell.is-update {
+  position: relative;
+}
+
+.heat-cell.is-update::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid #ebe2ca;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 60%);
+  pointer-events: none;
+}
+
+.heat-cell.is-update.is-major::after {
+  border-color: #ffd700;
+}
+
 /* Calendar days with matches are buttons. The frame goes, so they look like the cells around them. */
 button.heat-cell {
   appearance: none;

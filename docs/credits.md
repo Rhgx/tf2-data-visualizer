@@ -22,6 +22,10 @@ The UI sounds in `public/ui/sfx/` are processed from `sound/ui/` files in `tf2_s
 
 Map names come from TF2's `items_game.txt`, and map modes come from the [TF2 Wiki](https://wiki.teamfortress.com).
 
+## Update dates
+
+The update names and release dates in `src/data/updates.ts` come from the [TF2 Wiki](https://wiki.teamfortress.com) Patches and Updates pages.
+
 ## Flags
 
 The country flags in `public/ui/flags/` are [Twemoji](https://github.com/jdecked/twemoji) v17.0.3 graphics by jdecked, licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). The datacenter names beside them come from Valve's public Steam Datagram Relay config for TF2 (appid 440).

@@ -1,5 +1,6 @@
 import { Fragment, memo, type CSSProperties } from "react";
 import { formatHours, formatNumber } from "../lib/format";
+import { UPDATE_KIND_LABELS, updatesOn } from "../data/updates";
 import { DAY_LABELS, WEEKDAYS, heatLevel, heatTickLabels, type HeatCell, type HeatColumn, type HeatTotal } from "./stats";
 
 // CSS custom properties are not in CSSProperties, so the ones used here are typed on the style object instead of casting it.
@@ -37,12 +38,14 @@ interface HeatGridProps {
   edges?: { hours: HeatCell[]; days: HeatCell[] };
   // Days with matches become buttons that call this with their YYYY-MM-DD key
   onPickDay?: (dateKey: string) => void;
+  // Outlines the calendar days that TF2 updates were released on
+  markUpdates?: boolean;
 }
 
 // Every item is placed explicitly, so the edge bars can share the grid's tracks. overview.css sizes the tracks from --columns.
 // The legend is the last row of the grid, so it starts at the first cell column and shares the cell sizes.
 // Memoized, so a re-render of the panel leaves the grid alone when its own props are the same.
-export const HeatGrid = memo(function HeatGrid({ columns, cuts, mode, variant, edges, onPickDay }: HeatGridProps) {
+export const HeatGrid = memo(function HeatGrid({ columns, cuts, mode, variant, edges, onPickDay, markUpdates }: HeatGridProps) {
   const gridStyle: HeatStyle = { "--columns": columns.length };
   const edgeColumn = columns.length + 2;
   const hourEdges = edges?.hours ?? [];
@@ -77,6 +80,7 @@ export const HeatGrid = memo(function HeatGrid({ columns, cuts, mode, variant, e
                   column={index + 2}
                   row={day + FIRST_ROW}
                   onPickDay={onPickDay}
+                  markUpdates={markUpdates}
                 />
               ))}
             </Fragment>
@@ -127,24 +131,33 @@ interface HeatCellViewProps {
   column: number;
   row: number;
   onPickDay?: (dateKey: string) => void;
+  markUpdates?: boolean;
 }
 
-const HeatCellView = memo(function HeatCellView({ cell, cuts, mode, column, row, onPickDay }: HeatCellViewProps) {
+const HeatCellView = memo(function HeatCellView({ cell, cuts, mode, column, row, onPickDay, markUpdates }: HeatCellViewProps) {
   // null is a day outside the year. It keeps its grid slot but stays invisible.
   if (cell === null) return <span className="heat-cell is-outside" style={{ gridColumnStart: column, gridRowStart: row }} />;
   const place: HeatStyle = { gridColumnStart: column, gridRowStart: row };
   // A blank day has no data, so it has no tip and is not an image
   if (cell.blank) return <span className="heat-cell is-blank" style={place} />;
 
+  const { dateKey } = cell;
+  const updates = markUpdates && dateKey ? updatesOn(dateKey) : [];
+  const major = updates.some((update) => update.kind === "major");
   const thin = mode === "winrate" && cell.results > 0 && cell.results < THIN_RESULTS;
-  const className = `heat-cell${thin ? " is-thin" : ""}${cell.today ? " is-today" : ""}`;
+  const className = `heat-cell${thin ? " is-thin" : ""}${cell.today ? " is-today" : ""}${updates.length > 0 ? " is-update" : ""}${major ? " is-major" : ""}`;
   const style: HeatStyle = { ...place, ...fillOf(cell, cuts, mode) };
   const tip = cellTip(cell, mode);
-  const { dateKey } = cell;
+  // One note line per update, under the day's tip. The label reads the same text to screen readers after the tip.
+  const notes = updates.map((update) => `${update.name} (${UPDATE_KIND_LABELS[update.kind]})`);
+  const note = notes.length > 0 ? notes.join("\n") : undefined;
+  const label = [tip, ...notes].join(". ");
   if (onPickDay && dateKey && cell.count > 0) {
-    return <button type="button" className={className} style={style} data-tip={tip} aria-label={tip} onClick={() => onPickDay(dateKey)} />;
+    return (
+      <button type="button" className={className} style={style} data-tip={tip} data-tip-note={note} aria-label={label} onClick={() => onPickDay(dateKey)} />
+    );
   }
-  return <span className={className} style={style} data-tip={tip} role="img" aria-label={tip} />;
+  return <span className={className} style={style} data-tip={tip} data-tip-note={note} role="img" aria-label={label} />;
 });
 
 interface EdgeBarProps {

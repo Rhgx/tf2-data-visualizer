@@ -186,17 +186,23 @@ button img { pointer-events: none; }
 .search { display: flex; }
 .search input { flex: 1; }
 .field.check { color: var(--tan); font: 13px "TF2 Secondary", Verdana, sans-serif; text-transform: none; cursor: pointer; }
+/* Checkboxes follow TF2's CheckButton: a 12px dark box with a tan frame, and a chevron check in the label color.
+   The check is an SVG background because a CSS color cannot reach inside a background image, so its stroke repeats
+   --tan (#ebe2ca). The chevron sits 1px low, as in TF2. */
 .field.check input {
   appearance: none;
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   margin: 0;
-  background: #242221;
-  border: 1px solid var(--rule);
+  background: #100e0e;
+  border: 1px solid #766b5e;
   border-radius: 0;
 }
-.field.check input:checked { background: var(--orange); box-shadow: inset 0 0 0 3px #242221; }
+.field.check input:hover { border-color: var(--tan-muted); }
+.field.check input:checked {
+  background: #100e0e url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><polyline points='1.8 6 4 8.2 8.2 3.9' fill='none' stroke='%23ebe2ca' stroke-width='2' stroke-linecap='square'/></svg>") center / 100% 100% no-repeat;
+}
 
 /* HUD numbers: TF2 Build, tan, with the HUD's hard dark shadow. */
 .hud-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -316,6 +322,8 @@ button img { pointer-events: none; }
   overflow-wrap: anywhere;
   pointer-events: none;
 }
+/* The gold note under a tooltip's text (data-tip-note), such as the update names on the calendar */
+.item-tooltip-note { display: block; margin-top: 4px; color: #ffd700; }
 
 /* Drag highlight: the whole page dims and a panel says what will happen. Pointer events pass through to the page. */
 .drop-overlay {
