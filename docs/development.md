@@ -142,5 +142,5 @@ Other conventions:
 - Map names, game modes, and datacenter locations are imported as JSON, so refreshing the data needs a rebuild or a dev server restart.
 - The dashboard is a separate chunk, so the main bundle is only the menu, React, and the app shell. The dashboard chunk is prefetched once the menu is idle.
 - Chart.js only has the types the charts use, registered in `charts/Chart.tsx`. A new chart type needs its controller, elements, scale, or plugin added there, or creating the chart throws "is not a registered" from Chart.js.
-- The menu's character art uses the same media query as its CSS, so phones never download it. The help dialog's script is a separate chunk that loads when the dialog first opens.
+- The menu's character art uses the same media query as its CSS, so phones never download it. The 2014 and 2015 Halloween team art shows no character, as in TF2. The help dialog's script is a separate chunk that loads when the dialog first opens.
 - Fonts are WOFF2 files in `public/ui/fonts`, with every glyph kept (no subsetting). `base.css` declares them and `index.html` preloads them. To replace a font, convert it with fontTools and keep the same family names.

@@ -25,13 +25,15 @@ export function MainMenu({ loading, onFile }: MainMenuProps): JSX.Element {
 
   return (
     <div id="menu-screen">
-      <div className="menu-art" aria-hidden="true">
-        {/* The source has the same media query as menu.css's .menu-art, so the art is only requested where it is shown. */}
-        <picture>
-          <source media="(min-width: 900px) and (min-height: 600px)" srcSet={import.meta.env.BASE_URL + MENU_CHARACTER} />
-          <img alt="" decoding="async" />
-        </picture>
-      </div>
+      {MENU_CHARACTER !== null && (
+        <div className="menu-art" aria-hidden="true">
+          {/* The source has the same media query as menu.css's .menu-art, so the art is only requested where it is shown. */}
+          <picture>
+            <source media="(min-width: 900px) and (min-height: 600px)" srcSet={import.meta.env.BASE_URL + MENU_CHARACTER} />
+            <img alt="" decoding="async" />
+          </picture>
+        </div>
+      )}
 
       <div className="menu">
         <div className="menu-main">
